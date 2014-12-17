@@ -9,4 +9,4 @@ MEGAN
 Muscle 
 
 Perl 
- * Set::IntervalTree - this requires GCC newer than 4.1.2 which is on our current servers
+ * Set::IntervalTree - this requires GCC newer than 4.1.2.
