@@ -16,31 +16,29 @@ die "usage: $0 min_leng[integer] msa.file\n" unless $#ARGV == 1;
 ##################################################
 
 my ($minLength, $inputFile) = @ARGV;    #cutRegionSize, input.msa
-my $tree = Set::IntervalTree->new;
 my $msalength;  #length of msa
 my %seq;        #hash ref storing sequence information
 my %nnucl;      #depth at postion i of MSA
 my @starting;
-$|++;
+my $tree = Set::IntervalTree->new;
 ##################################################
 #+------------------------------------------------
 #Main
 #+------------------------------------------------
 ##################################################
-my ($KO) = $inputFile =~ m/(K\d{5})/;
+my ($KO)          = $inputFile            = ~ m/(K\d{5})/;
 #Step1: Parse MSA
-my $input = Bio::SeqIO->new(-file => "$inputFile", -format=>"fasta");
+my $input         = Bio::SeqIO->new(-file = > "$inputFile", -format = >"fasta");
+
 while (my $seqObj= $input->next_seq)
 {
     parseMSA($seqObj->display_id, $seqObj->seq)
-    #stores - msa length
-    #       - sequence information
-    #       - build intervals
 }
 
 #Step2: Find 10bp window with MAX diversity
 my $max_seq = max map {windowDepth($_, 10)} (9..$msalength);
-my $nseq = scalar keys %seq;    #dunno what is this for
+my $nseq    = scalar keys %seq;    #dunno what is this for
+
 #Step3
 #Calculate window statistics
 say join "\t", qw(ko msaTotSeq start end maxSeq.10bp seqInSameWindow newCut lens);
@@ -54,18 +52,17 @@ slidingWindow($_) for (0..($msalength-$minLength));
 
 func parseMSA ($header,$seq)
 {
-    my $count = ($seq=~s/([^\-])/$1/g); #length without gaps
+    my $count   = ($seq=~s/([^\-])/$1/g); #length without gaps
+    $msalength  = eval(length($seq) -1) unless defined $msalength;
     buildInterval($header, $seq) unless $count < $minLength;
-    $msalength = eval(length($seq) -1) unless defined $msalength;
 }
 
 func buildInterval ($header, $sequence)
 {
     if($sequence =~ m/^ (?<frontGap>-*) (?<body>.+?)    (?<endGap>-*)$/x)
     {
-        my $start = length $+{frontGap};
-        my $end   = $start + length $+{body};
-
+        my $start     = length $+{frontGap};
+        my $end       = $start + length $+{body};
         $seq{$header} = $sequence;
 
         #Objective2: Build intervals
@@ -130,7 +127,7 @@ func tryCutSize($cut, $startingPosition)
 func countNoGap($header, $starting, $length)
 {
     my $sequence = $seq{$header};
-    my $this = substr($sequence, $starting, $length);
-    my $nogap = ($this =~ s/[^-]//g);
+    my $this     = substr($sequence, $starting, $length);
+    my $nogap    = ($this =~ s/[^-]//g);
     return $nogap;
 }
