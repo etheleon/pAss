@@ -5,7 +5,6 @@ use autodie;
 use Bio::SeqIO;
 use List::Util qw(sum max);
 use Array::Utils qw(:all);
-use Data::Alias;
 use Method::Signatures;
 use Set::IntervalTree;
 
