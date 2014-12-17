@@ -30,7 +30,7 @@ my ($KO)    = $inputFile =~ m/(K\d{5})/;
 ##################################################
 
 #Step1: Parse MSA
-my $input         = Bio::SeqIO->new(
+my $input = Bio::SeqIO->new(
     -file => "$inputFile",
     -format =>"fasta"
 );
