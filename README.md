@@ -1,4 +1,4 @@
-pAss
+pAss - protein-guided Assembler
 ====
 
 Method for counting genes from a metagenomic survey
