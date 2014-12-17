@@ -20,15 +20,20 @@ my $msalength;  #length of msa
 my %seq;        #hash ref storing sequence information
 my %nnucl;      #depth at postion i of MSA
 my @starting;
-my $tree = Set::IntervalTree->new;
+my $tree    = Set::IntervalTree->new;
+my ($KO)    = $inputFile =~ m/(K\d{5})/;
+
 ##################################################
 #+------------------------------------------------
 #Main
 #+------------------------------------------------
 ##################################################
-my ($KO)          = $inputFile            = ~ m/(K\d{5})/;
+
 #Step1: Parse MSA
-my $input         = Bio::SeqIO->new(-file = > "$inputFile", -format = >"fasta");
+my $input         = Bio::SeqIO->new(
+    -file => "$inputFile",
+    -format =>"fasta"
+);
 
 while (my $seqObj= $input->next_seq)
 {
@@ -37,7 +42,7 @@ while (my $seqObj= $input->next_seq)
 
 #Step2: Find 10bp window with MAX diversity
 my $max_seq = max map {windowDepth($_, 10)} (9..$msalength);
-my $nseq    = scalar keys %seq;    #dunno what is this for
+my $nseq    = scalar keys %seq;
 
 #Step3
 #Calculate window statistics
