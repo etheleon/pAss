@@ -1,206 +1,95 @@
 #!/usr/bin/env perl
 
+use v5.20;
+use experimental 'signatures';
+use autodie;
+use Bio::SeqIO;
+use msa::alignment;
+
+#Pragma
 use strict;
-use lib "/export2/home/uesu/perl5/lib/perl5";
+use warnings;
+
 use Statistics::Basic qw(mean stddev);
 use Set::Intersection;
 
 my ($dbfasta, $msadir, $out) = @ARGV;
 die "usage: $0 db.fasta msa.dir out.msa\n" unless $#ARGV == 2 && -f $dbfasta && -d $msadir;
-$msadir =~ s|//|/|g;
-$msadir =~ s|/$||;
+$msadir =~ s|//|/|g; $msadir =~ s|/$||; #deal with weird path names
 
+my %seq;        #stores reference sequences
+my %good_hit;   #stores contigs which are good matches to the reference sequences
 my $temp = "$out".rand().time();
 
-print STDERR "reading db file\n";
-my %seq;
-my %len;
-open(IN, $dbfasta) or die;
-my $term = $/;
-$/ = "\n>";
-while(<IN>)
-{
-    s/^\s+|\s+$//g;
-    s/^\s*>|>\s*$//g;
-    s/^\s+|\s+$//g;
-    if(m/^(\S+).*?\n(.+)/s)
-    {
-        my $id = $1;
-        my $seq = $2;
+##################################################
+say STDERR "#reading db file";
+##################################################
+my $in = Bio::SeqIO->new(-file=>$dbfasta, -format=>"fasta");
+while(my $seqObj = $in->next_seq){
+    my $seq = $seqObj->seq();
+    $seq =~ s/\s+//g;
+    my $id = $seqObj->display_id();
+    $id = $1 if $id =~ m/(ref\|.+?\|)/;
+    $seq{$id}{seq}     =  uc $seq;
+    $seq{$id}{length}  =  length $seq;}
 
-        $id = $1 if $id =~ m/(ref\|(.+?)\|)/;
-        $seq =~ s/\s+//g;
-        $seq{$id} = uc $seq;
-        $len{$id} = length $seq;
-    }
-}
-$/ = $term;
+my @len = map $seq{$id}{len} keys %seq;
+my $len = { min=>mean(@len) - 2 * stddev(@len),
+            max=>mean(@len) + 2 * stddev(@len)};
 
-my @len = values %len;
-my $len_mean = mean(@len);
-my $len_sd = stddev(@len);
-my $len_min = $len_mean - 2 * $len_sd;
-my $len_max = $len_mean + 2 * $len_sd;
+##################################################
+say STDERR "#reading list of good references";
+##################################################
+selectRefseqs($_) for glob "$msadir/alignment-*";
 
-print STDERR "reading list of good references\n";
-my %good_hit;
-my %hit_len;
-my $ref;
-#my $xx;
-for my $msaf(glob("$msadir/alignment-*"))
-{
-#	$xx++;
-#	last if $xx > 30;
-    print STDERR "$msaf\n";
-    open(IN, $msaf) or die;
-    my $head = <IN>;
-    my $temp = <IN>;
-    if($head =~ m/^>(\S+)/)
-    {
-        $ref = $1;
-        next if $len{$1} < $len_min;
-        next if $len{$1} > $len_max;
-    }
-    while(my $h = <IN>)
-    {
-        my $seq = <IN>;
-
-        $h = $1 if $h =~ m/>(\S+)/;
-        my $gap = ($seq =~ s/-//g);
-        my $len = length $seq;
-        $len -= $gap/1e6;
-        if($len > $hit_len{$h})
-        {
-            $good_hit{$h} = $ref;
-            $hit_len{$h} = $len;
-        }
-    }
-}
-
-print STDERR "preparing good_ref sequences for MSA\n";
-open(OUT, ">$out.temp.ref.faa") or die;
+##################################################
+say STDERR "#preparing good_ref sequences for MSA";
+##################################################
+open my $out, ">", "$out.temp.ref.faa";
 my %good_ref;
-for my $ref(values %good_hit)
-{
-    next if $good_ref{$ref};
-    print OUT ">$ref\n$seq{$ref}\n";
-    $good_ref{$ref} = 1;
-}
-print STDERR "MSA\n";
-system("muscle -in $out.temp.ref.faa -out $out.temp.ref.msa");
+for my $ref (keys %good_hit){
+    next if $good_ref{$good_hit{$ref}{id}};
+    print $out ">$good_hit{$ref}{id}\n$seq{$good_hit{$ref}{id}}\n";
+    $good_ref{$ref} = 1;}
 
-print STDERR "mapping ref_seq to MSA coordinates\n";
+##################################################
+say STDERR "#Running MSA with Muslce";
+##################################################
+system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa";
+
+##################################################
+say STDERR "#Mapping ref_seq to MSA coordinates";
+##################################################
 my %map;
-open(IN, "$out.temp.ref.msa") or die;
-$/ = "\n>";
-while(<IN>)
-{
-    s/^\s+|\s+$//g;
-    s/^\s*>|>\s*$//g;
-    s/^\s+|\s+$//g;
-    if(m/^(\S+).*?\n(.+)/s)
-    {
-        my $id = $1;
-        my $seq = $2;
+my $in=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta");
+while(my $seqObj = $in->next_seq){
+        my $id = $seqObj->display_id;
+        my $seq = $seqObj->seq;
         $seq =~ s/\s+//g;
+        while($seq =~ m/[^-]/g){
+            state $aaIndex++;
+            my $subStrLoc= $-[0] + 1;
+            $map{$id}{$aaIndex} = $subStrLoc;}}}
 
-        my $i = 0;
-        while($seq =~ m/[^-]/g)
-        {
-            $i++;
-            my $j = $-[0] + 1;
-            $map{$id}->{$i} = $j;
-        }
-    }
-}
-$/ = $term;
+##################################################
+say STDERR "mapping raw DNA sequences to MSA coordinates";
+##################################################
 
-print STDERR "mapping raw DNA sequences to MSA coordinates\n";
 my %hit;
 my %msa2ref;
 my $ref;
 my %pos;
-#my $xx;
-for my $msaf(glob("$msadir/alignment-*"))
+
+##################################################
+print STDERR "$msaf\n";
+##################################################
+loopMSAF($_) for glob "$msadir/alignment-*";
+
+open OUT, ">","$out.msa";
+my $out=Bio::SeqIO->new(-file=>">out.msa",-format=>"fasta")
+for my $id (keys %hit)
 {
-#	$xx++;
-#	last if $xx > 30;
-    print STDERR "$msaf\n";
-    open(IN, $msaf) or die;
-    $/ = "\n>";
-    while(<IN>)
-    {
-        s/^\s+|\s+$//g;
-        s/^\s*>|>\s*$//g;
-        s/^\s+|\s+$//g;
-        if(m/^(\S+).*?\n(.+)/s)
-        {
-            my $id = $1;
-            my $seq = $2;
-            $seq = uc $seq;
-            $seq =~ s/\s+//g;
-
-            my $pos = 0;
-
-            if($id =~ m/^ref\|/)
-            {
-                $ref = $id;
-                next unless $good_ref{$ref};
-
-                my $last_end = 0;
-                while($seq =~ m/(([^-]--)+)/g)
-                {
-                    my $start = $-[0];
-
-                    my $fullseq = $1;
-                    my $stripseq = $1;
-                    $stripseq =~ s/-//g;
-#					print "$stripseq\n";
-
-                    my $index = index(substr($seq{$id}, $last_end), $stripseq);
-#					print "$index\n";
-
-                    my $i = 0;
-                    while($fullseq =~ m/[^-]/g)
-                    {
-                        $i++;
-                        my $j = $start + $-[0] + 1;
-                        $msa2ref{$j} = $i + $last_end + $index;
-#						print "\t\t", substr($seq{$id}, $msa2ref{$j}-1, 1), "=", substr($seq, $j-1, 1), "\n";
-                    }
-
-
-                    $last_end += length $stripseq;
-                }
-            }else
-            {
-                next unless $good_hit{$id} eq $ref;
-
-                while($seq =~ m/([^-]{3})/g)
-                {
-                    my $codon = $1;
-                    my $j = $-[0] + 1;
-                    my $i = $msa2ref{$j};
-                    my $this = $map{$ref}->{$i};
-                    if($this)
-                    {
-                        $pos = $this;
-                    }else
-                    {
-                        $pos += 1/1e6;
-                    }
-                    $pos{$pos}++;
-                    $hit{$id}->{$pos} = $codon;
-                }
-            }
-        }
-    }
-}
-
-open OUT, ">$out.msa" or die;
-for my $id(keys %hit)
-{
-    print OUT ">$id\n";
+    say OUT ">$id";
     for my $pos(sort {$a <=> $b} keys %pos)
     {
         my $codon = $hit{$id}->{$pos};
@@ -210,4 +99,183 @@ for my $id(keys %hit)
     print OUT "\n";
 }
 close OUT;
+
+sub selectRefseqs ($alignment)                                  {
+    say STDERR "$msaf"                                          ;
+    my $in=Bio::SeqIO->new(-file=>$alignment, -format=>'fasta') ;
+#PROTEIN SEQUENCE
+    my $refObj = $in->next_seq                                  ;
+    my $head   = $refObj->display_id                              ;
+    if($head =~ m/^>(\S+)/)                                     {
+        #skip if the sequence is too short
+        my $ref = $1                                            ;
+        return if $seq{$ref}{length} < $len{min}                 ;
+        return if $seq{$ref}{length} > $len{max}                 ;}
+#Parse Contig MSA (DNA)
+    while(my $seqObj = $in->next_seq)                           {
+        my $h = $seqObj->display_id
+        $h = $1 if $h =~ m/>(\S+)/                              ;
+        my $gap = ($seq =~ s/-//g)                              ;
+        my $len = $seqObj->length                               ;
+        $len -= $gap/1e6                                        ;
+        if($len > $hit_len{$h})                                 {
+            $good_hit{$h}{id} = $ref                            ;
+            $good_hit{$h}{length} = $len                        ;}}}
+
+sub loopMSAF ($alignmentFile){
+my $in=Bio::SeqIO(-file=>$msaf,-format=>"fasta");
+    while(my $seqObj = $in->next_seq){
+        my $id = $seqObj->display_id;
+        my $seq = $seqObj->seq;
+        $seq = uc $seq;
+        $seq =~ s/\s+//g;
+        my $alignment = msa::alignment->new(sequence=>$seq, id=>$id):
+        if($alignment->ifRefseq)
+        {
+            while($seq =~ m/(([^-]--)+)/g)
+            {
+                my $start = $-[0];
+                my $fullseq = $1;
+#			print "$stripseq\n";
+                my $index = index(substr($seq{$id}, $last_end), $stripseq);
+#			print "$index\n";
+                my $i = 0;
+                while($fullseq =~ m/[^-]/g)
+                {
+                    $i++;
+                    my $j = $start + $-[0] + 1;
+                    $msa2ref{$j} = $i + $last_end + $index;
+#						print "\t\t", substr($seq{$id}, $msa2ref{$j}-1, 1), "=", substr($seq, $j-1, 1), "\n";
+                }
+                $last_end += length $stripseq;
+            }
+        }else
+        {
+            next unless $good_hit{$id} eq $ref;
+
+            while($seq =~ m/([^-]{3})/g)
+            {
+                my $codon = $1;
+                my $j = $-[0] + 1;
+                my $i = $msa2ref{$j};
+                my $this = $map{$ref}{$i};
+                if($this)
+                {
+                    $pos = $this;
+                }else
+                {
+                    $pos += 1/1e6;
+                }
+                $pos{$pos}++;
+                $hit{$id}->{$pos} = $codon;
+            }
+        }
+    }
+}
+
+
+}
+
+package msa::alignment;
+
+use Moo;
+use v5.20;
+use experimental 'signatures';
+use strictures 2;
+use namespace::clean;
+
+sub isGoodSeq ($self){
+    my $id = $self->id;
+    my ($isRefseq) = $id =~ m/^ref\|/ ? 1 : 0;
+    return exists $good_ref{$ref} ? 1 : 0;
+}
+
+has stripSeq =>(
+    is      => 'ro',
+    default => sub($self){
+        my $sequence = $self->sequence;
+        return $sequence =~ s/-//g;
+    }
+)
+
+has sequence => (
+    is => 'ro',
+    isa => sub {die "No spaces allow" unless $_[0] =~ !/\s*/},
+    required=>1,
+);
+
+has position => (
+    is  => 'rw',
+    default=> 0,
+);
+
+has last_end => (
+    is =>'rw',
+    default=>0,
+);
+
+has id => (
+    is  => 'ro',
+    required=>1,
+);
+
+
+
+1;
+
+if($id =~ m/^ref\|/)
+    {
+        $ref = $id;
+        next unless $good_ref{$ref};
+
+        my $last_end = 0;
+        while($seq =~ m/(([^-]--)+)/g)
+        {
+            my $start = $-[0];
+
+            my $fullseq = $1;
+            my $stripseq = $1;
+            $stripseq =~ s/-//g;
+#					print "$stripseq\n";
+
+            my $index = index(substr($seq{$id}, $last_end), $stripseq);
+#					print "$index\n";
+
+            my $i = 0;
+            while($fullseq =~ m/[^-]/g)
+            {
+                $i++;
+                my $j = $start + $-[0] + 1;
+                $msa2ref{$j} = $i + $last_end + $index;
+#						print "\t\t", substr($seq{$id}, $msa2ref{$j}-1, 1), "=", substr($seq, $j-1, 1), "\n";
+            }
+
+
+            $last_end += length $stripseq;
+        }
+    }else
+    {
+        next unless $good_hit{$id} eq $ref;
+
+        while($seq =~ m/([^-]{3})/g)
+        {
+            my $codon = $1;
+            my $j = $-[0] + 1;
+            my $i = $msa2ref{$j};
+            my $this = $map{$ref}{$i};
+            if($this)
+            {
+                $pos = $this;
+            }else
+            {
+                $pos += 1/1e6;
+            }
+            $pos{$pos}++;
+            $hit{$id}->{$pos} = $codon;
+        }
+    }
+}
+    }
+}
+
 
