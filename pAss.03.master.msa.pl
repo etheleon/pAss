@@ -68,7 +68,9 @@ for my $msaf(glob("$msadir/alignment-*"))
         $h = $1 if $h =~ m/>(\S+)/;
         my $gap = ($seq =~ s/-//g);
         my $len = length $seq;
+        print "this is my length: $len\n";
         $len -= $gap/1e6;
+        print "my newlength: $len\n";
         if($len > $hit_len{$h})
         {
             $good_hit{$h} = $ref;
