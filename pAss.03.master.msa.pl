@@ -7,6 +7,7 @@ no warnings 'experimental';
 use autodie                                                                                                                 ;
 use Bio::SeqIO                                                                                                              ;
 use MSA::Alignment                                                                                                          ;
+use Data::Dumper;
 
 use Statistics::Basic qw(mean stddev)                                                                                       ;
 use Set::Intersection                                                                                                       ;
@@ -20,27 +21,32 @@ my %refseq;        #stores reference sequences
 my $temp = "$out".rand().time()                                                                                             ;
 
 #Part:1###########################################
-say STDERR "#READ REFERENCE PROTEIN SEQUENCES"                                                                              ;
+print STDERR "# ::1:: READ REFERENCE PROTEIN SEQUENCES"                                                                              ;
 ##################################################
     my $in = Bio::SeqIO->new(-file=>$dbfastaProt, -format=>"fasta")                                                         ;
     while(my $seqObj = $in->next_seq)                                                                                       {
-        $refseq{$seqObj->display_id} = {seq =>  uc $seqObj->seq, length =>  $seqObj->length}                                 };
-
+        my $id = $seqObj->display_id;
+        $id =~ m/(?<refID>ref\|\S+?\|)/; #MEGAN only keeps this
+        $refseq{$+{refID}} = {seq =>  uc $seqObj->seq, length =>  $seqObj->length}                                 };
     #min and max referenceSequence lengths
-    my @len = map {$refseq{$_}->{len}} keys %refseq                                                                           ;
+    say STDERR "!!DONE";
+
+    my @len = map {$refseq{$_}->{length}} keys %refseq                                                                           ;
     my $len = {min => mean(@len) - 2 * stddev(@len), max => mean(@len) + 2 * stddev(@len)                                   };
+    say "#\tMIN ref length: $len->{min}\n#\tMAX ref length: $len->{max}\n";
 
 #Part:2###########################################
-say STDERR "#ASSIGN BEST MATCH"                                                                                             ;
+say STDERR "# ::2:: ASSIGN BEST MATCH"                                                                                             ;
 ##################################################
     my $good_hit;   #assigns contigs to best refseq match
     #Criteria:
     #       1. length must be within 2 SDs of the mean length left and right (will no)
     assignContig2ref($_) for glob "$msadir/alignment-*"                                                                     ;
+say STDERR "#\t!!DONE\n";
 
 #Part:3###########################################
-say STDERR "#MSA OF PROTEINS"                                                                                               ;
-say STDERR "    #WRITING REFSEQS"                                                                                           ;
+say STDERR "# ::3:: MSA OF PROTEINS"                                                                                               ;
+print STDERR "#\tWRITING REFSEQS"                                                                                           ;
 ##################################################
     my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa",-fasta => "fasta")                                              ;
     my %good_ref                                                                                                            ;
@@ -54,11 +60,15 @@ say STDERR "    #WRITING REFSEQS"                                               
         $MSAout->write_seq($outputSeq)                                                                                         ;
         $good_ref{$protRef}++                                                                                               ;}
     #########################
-    say STDERR "\t#RUN MSA"                                                                                               ;
+say STDERR "\t!!DONE";
+    print STDERR "#\tGenerate MSA with Muscle
+##################################################"                                                                                               ;
     #########################
+
     system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa"                                                            ;
     #########################
-    say STDERR "\t#MAPPING"                                                                                               ;
+    say STDERR "##################################################\n";
+print STDERR "#\tMAPPING"                                                                                               ;
     #########################
     my $map                                                                                                                 ;
     my $in=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
@@ -70,13 +80,12 @@ say STDERR "    #WRITING REFSEQS"                                               
                 $aaIndex++;   #for each aa
                 my $aaLOC = $-[0] + 1                                                                                       ;
                 $map->{$id}{$aaIndex} = $aaLOC                                                                                ;}}
+say STDERR "\t!!DONE";
 
 #Part:4###########################################
-say STDERR "MAPPING NT CONTIGS TO PROT MSA"                                                                                 ;
+say STDERR "# ::4:: MAPPING CONTIGS TO REF PROT MSA"                                                                                 ;
 ##################################################
-#my (%hit, %pos)                                                                                                             ;
-#my $Finalout=Bio::SeqIO->new(-file=>">$out.msa",-format=>"fasta");
-
+my $Finalout=Bio::SeqIO->new(-file=>">$out.msa",-format=>"fasta");
 #my @reference = map loopMSA($_, $out) for glob "$msadir/alignment-*"                                                                            ;
 
 #for my $id (keys %hit)                                                         {
@@ -90,14 +99,16 @@ say STDERR "MAPPING NT CONTIGS TO PROT MSA"                                     
 #So we only assign the contig to ref prot sequence if the the alignment requires the least amount of gaps to be introduced.
 sub assignContig2ref ($alignment)                                                           {
     my $msaFile = (split /\//, $alignment)[-1]                                              ;
-    say STDERR "processing $msaFile"                                                        ;
+    say STDERR "#\tprocessing $msaFile"                                                        ;
     my $in=Bio::SeqIO->new(-file=>$alignment,-format=>'fasta')                              ;
 ## PROTEIN SEQUENCE
     my $refObj = $in->next_seq                                                              ;
     my $id = $refObj->display_id                                                            ;
+    $id =~ m/(?<refID>ref\|\S+?\|)/; #MEGAN only keeps this
     #skip if the sequence is too short or too long ??WHY??
-    return if $refseq{$id}->{length} < $len->{min} || $refseq{$id}->{length} > $len->{max}  ;
-    my $protRef = $id                                                                       ;
+
+    return if $refseq{$+{refID}}->{length} < $len->{min} || $refseq{$+{refID}}->{length} > $len->{max}  ;
+    my $protRef = $+{refID}                                                                       ;
 ## PARSE CONTIG MSA (DNA)
         while(my $seqObj = $in->next_seq)                                                   {
             my $contigID  =  $seqObj->display_id                                            ;
@@ -106,7 +117,7 @@ sub assignContig2ref ($alignment)                                               
             my $len       =  $seqObj->length                                                ;
             $len    -=  $numGaps/1e6                                                        ;
             my $isBetterMatch = $len > $good_hit->{$contigID}{length}                       ;
-            $good_hit->{$contigID}{parentREF => $protRef, length => $len} if $isBetterMatch }}
+            $good_hit->{$contigID} = {parentREF => $protRef, length => $len} if $isBetterMatch }}
 
 sub loopMSA ($alignmentFile, $out)                                                                                          {
     #Function processes a single alignment file from MEGAN which is split into the reference seq and contigs
