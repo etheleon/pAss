@@ -1,122 +1,282 @@
 #!/usr/bin/env perl
 
-package MSA::Alignment;
-use Moo;
+package PASS::Alignment;
 use v5.20;
-use feature 'signatures', 'postderef';
-no warnings 'experimental';
-use strict;
+use Moo;
+use experimental qw/signatures postderef/;
 use namespace::clean;
+use Bio::SeqIO;
+use Statistics::Basic qw/mean stddev/;
+use Data::Dumper;
+use List::MoreUtils qw/uniq/;
 
-sub processRef($self){
-    #gives a reference keypair of locations key:position value:aa
-    my $fullseq = $self->sequence;
-    my $refseq= $self->refseq;
-    my $last_end = 0;
-    while($fullseq=~ m/(([^-]--)+)/g){  #will only match A--
-        my $start = $-[0];  #LOC before the 1st amino acid
-        my $fullseq = $1;   #sequence after the gaps
-        (my $strippedSeq = $fullseq) =~ s/-//g;
-        my $index = index(substr($refseq, $last_end), $strippedSeq);  #sometimes it isnt a full alignment with the reference sequernce, so i need to know where it begins
+my $ii=0;
+#main methods
+#1
+sub storeRefseq($self){
+    my $dbin = Bio::SeqIO->new(-file=>$self->refseqFasta, -format=>"fasta")                                                       ;
+    while(my $seqObj = $dbin->next_seq)                                                                                     {
+        my $refseqID = $self->grepRefSeqID($seqObj->display_id)                                                                                        ;
+        $self->{refseq}{$refseqID} = {seq => $seqObj->seq, length => $seqObj->length}
+    };
+}
+#2
+sub assignContig2ref ($self){
+    $self->minmax;
+    for my $alignmentFile ($self->alignmentFiles->@*){
+        my $msaFile = (split /\//, $alignmentFile)[-1]                                                                              ;
+        my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta')                                                              ;
+# PROTEIN SEQUENCE
+        my $refObj = $in->next_seq                                                                                              ;
+        my $refseqID = $self->grepRefSeqID($refObj->display_id);
 
-        my $aa = 0;
-        while($fullseq =~ m/[^-]/g)
-        { #move stepwise from 1 aa to the next aa
-            $aa++;
-            my $ntLoc = $start + $-[0] + 1; #plus one cause ltr we will do substr
-            $self->{msa2ref}{$ntLoc} = $aa + $last_end + $index;
+        my $isCorrectLength = $self->{refseq}{$refseqID}{length} > $self->min &&  $self->{refseq}{$refseqID}{length} < $self->max;
+        #refseq sequences shd be trimmed because ltr we will pivot the choice of alignment based on whther the sequence is too long;
+        $self->{refseq}{$refseqID}{safe} = $isCorrectLength ? 1 : 0;
+        next unless $isCorrectLength;
+# PARSE CONTIG MSA (DNA)
+        while(my $seqObj = $in->next_seq){
+            my $contigID  =  $seqObj->display_id;
+            my $sequence = $seqObj->seq;
+            my $gap = ($sequence =~ s/-//g);
+            my $length = length $sequence;
+            $length -= $gap / 1e6;
+            #say "$alignmentFile\n$refseqID\t$length" if $contigID eq 'contig00049';
+            my $contigDetails = {
+                seq  =>  $seqObj->seq,
+                len =>   $length,
+                parentREF => $refseqID,
+            };
+            if(!exists $self->{contigs}{$contigID}){
+                $self->{contigs}{$contigID} = $contigDetails;
+            }else{
+                my $isBetterMatch = $contigDetails->{len} > $self->{contigs}{$contigID}{len}                                                       ;
+                if ($isBetterMatch){
+                    #say "Found better match";
+                    $self->{contigs}{$contigID} = $contigDetails
+                }}}}}
+#3
+sub runMuscle($self){
+    #muscle is heuristic, each run will give you a different output
+    my $out = $self->outputPrefix;
+    my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa", -fasta => "fasta")                                           ;
+    $MSAout->width(1000);
+    my @protRef = uniq map {$self->{contigs}{$_}{parentREF}} keys $self->contigs->%*;
+    say "number of reference sequences included: ", scalar @protRef;
+    foreach (@protRef){
+        my $outputSeq = Bio::Seq->new(
+            -display_id => $_,
+            -seq        => $self->{refseq}{$_}{seq},
+            -alphabet   => 'protein');
+        $MSAout->write_seq($outputSeq);
+    }
+
+    say STDERR "##\t ::b:: Generate MSA with Muscle";
+    print STDERR '#' x 50;
+    #system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa"                                                            ;
+    print STDERR '#' x 50;
+    say STDERR "";
+
+    my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
+    while(my $seqObj = $MUSCLEinput->next_seq)                                                                                       {
+        my $seq = $seqObj->seq                                                                                          ;
+        my $refseqID = $seqObj->display_id                                                                                    ;
+        my $aaIndex = 1                                                                                                   ;
+        while($seq =~ m/[^-]/g)
+        {
+            #$-[0] is zero index
+            my $msaLOC = $-[0] + 1                                                                                       ;
+            $self->{refseq}{$refseqID}{map}{$aaIndex} = $msaLOC                                                                              ;
+            $aaIndex++;
         }
-        $last_end += length $strippedSeq;}};
+    }
+}
+#4
+sub buildContigMSA($self){
+    #gives a reference keypair of locations key:position value:aa
+    foreach my $alignmentFile ($self->alignmentFiles->@*){
+        my $in=Bio::SeqIO->new(-file => $alignmentFile, -format => "fasta");
+        my $seqObj = $in->next_seq;
+        my $refseqID             =  $seqObj->display_id;
+        my $fullRefseqSeq = $self->{refseq}{$refseqID}{seq};
 
-sub processContig($self, $contigSequence, $id)                                                                                                {
-    while($contigSequence =~ m/([^-]{3})/g)                                                                                                   {
-        my $codon                                 =  $1                                                                                       ;
-        my $msaLoc                                =  $-[0] + 1                                                                                ;
-        my $aaLOC                                 =  $self->{msa2ref}->{$msaLoc}                                                                        ;
-        my $this                                  =  $self->{map}->{$id}{$aaLOC}                                                                     ;
-        $this ? $self->position($this) : $self->upPos(1/1e6)                                                                                  ;
-        $self->pos->{$self->position}++                                                       ;    #this logs the number of sequences in that particular positon
-        $self->hit->{$id}{$self->position}                         =  $codon                                                                             ;}};
+        ###################################################
+        #Step1: Process Refseq alignment
+        ###################################################
+        my $isReferenceSeq  =  ($refseqID =~ m/^ref\|/);
+        my $isGood = $self->{refseq}{$refseqID}{safe};
+        if($isReferenceSeq && $isGood)
+        {
+            my $fullAlignment = $seqObj->seq;
+            my $offset = 0;
+            while($fullAlignment =~ m/(?<continuousAA>(?<codon>[^-]--)+)/g)
+            {  #will only match X-- patterns so wont work for ----
+                my $start           =  $-[0];  #zero indexed amino acid position
+                my $spacedSeq       =  $+{continuousAA};
+                (my $continuousSeq  =  $spacedSeq) =~ s/-//g;
 
-sub upPos($self, $amount){
-    my $i = $self->position;
-    $i = $i + $amount;
-    $self->position($i);
-};
+                my $index           =  index(substr($fullRefseqSeq, $offset), $continuousSeq);  #incomplete alignment with the reference sequernce
 
-sub dump($self){
-    return {
-        pos=>$self->pos,
-        hit=>$self->hit}
+                #within the single stretch process each AA
+                my $aa              =  0;
+                while($spacedSeq =~ m/[^-]/g)
+                { #move stepwise from 1 aa to the next aa
+                    $aa++;
+                    my $ntLoc = $start + $-[0] + 1; #plus one cause ltr we will do substr
+                    #msa_nt_LOCATION :: aaLOCATION
+                    $self->{refseq}{$refseqID}{ntMSALoc}{$ntLoc} = $aa + $offset + $index;
+                }
+                $offset += length $continuousSeq;
+            }
+            #if($refseqID eq 'ref|YP_002946110.1|'){
+                #my %mapping = $self->{refseq}{$refseqID}{ntMSALoc}->%*;
+                #say "checking $_\t$mapping{$_}" for keys %mapping;
+                #exit 1;
+            #}
+
+            ###################################################
+            #Step2: NT Contigs
+            ###################################################
+            while($seqObj = $in->next_seq){
+                my $contigID = $seqObj->display_id;
+                my $isComplement = $self->{contigs}{$contigID}{parentREF} eq $refseqID;
+                if($isComplement)
+                {
+                    my $aaXaa = 0;  #new sequence
+                    my $contigSequence = $seqObj->seq;
+                    while($contigSequence =~ m/(?<codon>[^-]{3})/g)
+                    {
+                        #say "Aln: $alignmentFile\nQuery: $contigID\nSubject: $refseqID\ncodon: $+{codon}";
+                        ##position in contigXrefseq msa
+                        my $msaLoc  =  $-[0] + 1;
+                        #say "msa: ", substr($contigSequence, 0, $msaLoc+2);
+
+                        ##position in aa
+                        #Match to an amino acid may or may not exists
+                        #Protein D--  ---  --- G--
+                        #Contig  ACC (gtg) gcc GCC
+                        my $aa;
+                        if(exists $self->{refseq}{$refseqID}{ntMSALoc}{$msaLoc})
+                        {
+                            $aa = $self->{refseq}{$refseqID}{ntMSALoc}{$msaLoc};
+                            #say "aa position: ", $aa;
+                            #my $tempAA = $aa - 1;
+                            #say "the aa: ",join "", (split("",$self->{refseq}{$refseqID}{seq}))[0..$tempAA];
+
+                            #position of aa in global msa (based on aa)
+                            $aaXaa = $self->{refseq}{$refseqID}{map}{$aa};
+                            #store codon in contig obj for that aaXaa position
+                            $self->{contigs}{$contigID}{globalCoordinates}{$aaXaa} = $+{codon};
+                        }else
+                        {
+                            say "Contig: $contigID ::Reference $alignmentFile\n$contigSequence";
+                            say "position: $msaLoc";
+                            say "msa: \n", substr($contigSequence, 0, $msaLoc+2);
+                            say substr($self->{refseq}{$refseqID}{seq}, $aa);
+                            sleep 1000;
+                            $ii++;
+                            #if there isnt any match of aa then increment the position by 1/1e6
+                            $aaXaa+=1/1e6;
+                            #say "doesnt exists: $contigID\t$aaXaa";
+                            $self->{contigs}{$contigID}{globalCoordinates}{$aaXaa} = $+{codon};
+                        }
+                        $self->{pos}{$aaXaa}++;
+                    }
+                    #if($contigID eq'contig00049' && $isComplement)
+                    #{
+                        #my %mapping = $self->{contigs}{$contigID}{globalCoordinates}->%*;
+                        #say "checking\t$_\t$mapping{$_}" for keys %mapping;
+                        #exit 1;
+                    #}
+                }else{
+                    next
+                };
+            }
+        }else{
+            next
+        }
+    }
+    say $ii;
 }
 
-has msa2ref => (
+
+#Accessory methods
+sub grepRefSeqID ($self, $header){
+$header =~ m/(ref\|\S+?\|)/                                                                                     ;
+return $1;
+}
+
+sub minmax($self){
+    #Criteria for selecting refseq sequences
+    #       1. length must be within 2 SDs of the mean length left and right (will no)
+    my @len = map {$self->{refseq}{$_}{length} }keys $self->{refseq}->%*                                                                      ;
+    $self->min(mean(@len) - 2 * stddev(@len));
+    $self->max(mean(@len) + 2 * stddev(@len));
+    print "#\tMIN ref length: ",$self->min,"\n";
+    print "#\tMAX ref length: ",$self->max,"\n";
+}
+
+#0       M
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#1       M A
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#2       M A V
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#3       M A V G
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#10      M A V G D
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#11      M A V G D V
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#12      M A V G D V T
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#13      M A V G D V T M
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#14      M A V G D V T M P
+#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
+#15      M A V G D V T M P Q
+
+has pos => (
     is => 'rw',
     handles => {},
 );
 
-has map => (
-    is => 'rw',
-    handles => {},
+#Curated
+has refseqFasta => (
+    is => 'ro',
+    required => 1,
 );
 
-has hit => (
-    is => 'rw',
-    handles => {},
+has alignmentFiles =>(
+is=>'ro',
+handle => [],
+#required=>1,
 );
 
-has pos =>(
-    is => 'rw',
+has outputPrefix =>(
+is=>'ro',
+required=>1,
 );
 
-has position => (
-    is  => 'rw',
-    default=> 0,
-);
-
-## Required attributes
+#Refseq sequences & lengths
 has refseq => (
-    is => 'ro',
-    isa => sub {die "No spaces allowed" unless $_[0] =~ m/[^\s]/},
-    required=>1,
+    is =>'rw',
+    handle => {},
 );
 
-has sequence => (
-    is => 'ro',
-    isa => sub {die "No spaces allowed" unless $_[0] =~ m/[^\s]/},
-    required=>1,
+#Contigs
+has contigs => (
+is=>'rw',
+handle=>{},
 );
 
-has id => (
-    is  => 'ro',
-    required=>1,
+#Min and max lengths of refseq sequences
+has min=>(
+is=>'rw',
+default=>0,
 );
+has max=>(
+is=>'rw',
+default=>0,
+) ;
 1;
-
-#use strict;
-#use v5.20;
-#use experimental 'postderef';
-#use Data::Dumper;
-#use Bio::Seq;
-#use Bio::SeqIO;
-#use MSA::Alignment;
-
-#say "#Test";
-#my $ref= Bio::Seq->new(
-    #-seq=>"PALGLGTWKSSPQVVGQAVEQALDLGYRHLDCAAIYGNEAEIGATLANAFTKGVVKREELWITSKLWSNAHHPDAVLPALEKTLQDLGLDYLDLYLIHWPVVIQPDVGFPESGDQLLPFTPASLEGTWQALEKAVDLGLCHHIGVSNFSLKKLEMVLSMARIPPAVNQVELHPYLQQSDLLTFANSQNILLTAYSPLGSGDRPAAFQQAAEPKLLTDPVINGIAAEQGCSAAQVLLAWAIQRGTVTIPKSVNPERLEQNLRAADITLTDSEMAKIALLDRHYRYVSGDFWTMPGSPYTLQNLWDE",
-    #-display_id=>"ref",
-    #-alphabet=>'protein', -format=>"fasta");
-#my $in = Bio::SeqIO->new(-file=>"example/msaFile", -format=>"fasta");
-#my $head= $in->next_seq;
-#my $alignmentObj = MSA::Alignment->new(
-    #sequence=>$head->seq,
-    #id=>$head->display_id,
-    #refseq=>$ref->seq,
-#);
-
-#$alignmentObj->processRef;
-#while(my $seqObj = $in->next_seq){
-#$alignmentObj->processContig($seqObj->seq,$seqObj->display_id);
-#}
-
-#say Dumper($alignmentObj);

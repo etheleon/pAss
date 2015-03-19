@@ -32,11 +32,13 @@ while(<IN>)
             my $last_end = 0;
 #                                                              *
 #---------------------------------------------------------------P--A--L--G--L--G--T--W--K--S--S--P--Q--V--V--G--Q--A--V--E--Q--A--L--D--L--G--Y--R--H--L--D--C--A--A--I--Y--G--N--E--A--E--I--G--A--T--L--A--N--A--F--T--K--G--V--V--K--R--E--E--L--W--I--T--S--K--L--W--S--N--A--H--H--P--D--A--V--L--P--A--L--E--K--T--L--Q--D--L--G--L--D--Y--L--D--L--Y--L--I--H--W--P--V--V--I--Q--P--D--V--G--F--P--E--S--G--D--Q--L--L--P--F--T--P--A--S--L--E--G--T--W--Q--A--L--E--K--A--V--D--L--G--L--C--H--H--I--G--V--S--N--F--S--L--K--K--L--E--M--V--L--S--M--A--R--I--P--P--A--V--N--Q--V--E--L--H--P--Y--L--Q--Q--S--D--L--L--T--F--A--N--S--Q--N--I--L--L--T--A--Y--S--P--L--G--S--G--D--R--P--A--A--F--Q--Q--A--A--E--P--K--L--L--T--D--P--V--I--N--G--I--A--A--E--Q--G--C--S--A--A--Q--V--L--L--A--W--A--I--Q--R--G--T--V--T--I--P--K--S--V--N--P--E--R--L--E--Q--N--L--R--A--A--D--I-----T--L--T--D--S--E--M--A--K--I--A--L--L--D--R--H--Y--R--Y--V--S--G--D--F--W--T--M--P--G--S--P--Y--T--L--Q--N--L--W--D--E--
-            while($seq =~ m/(([^-]--)+)/g)
+            while($seq =~ m/(?<fullStretch>(?<AA>[^-]--)+)/g)
             {
                 my $start = $-[0];  #the place before the 1st amino acid
                 say "FRONT GAPS:",substr($seq, 0, $-[0]);   #until *
-                my $fullseq = $1;   #the sequence after the gaps
+                my $fullseq = $+{fullStretch};   #the sequence after the gaps
+                say "this is dollar 1: ", $1;   #the sequence after the gaps
+                say "this is dollar 2: ", $2;   #the sequence after the gaps
                 say "this is sequence: ", $fullseq;
                 (my $stripseq = $fullseq) =~ s/-//g;
                 say "stripped till GAP: \n$stripseq\n";
@@ -59,7 +61,26 @@ while(<IN>)
                 $last_end += length $stripseq;
                 say "lastEND:",$last_end;
             }
-        }
+        }else{
+                next unless $good_hit{$id} eq $ref;
+
+                while($seq =~ m/([^-]{3})/g)
+                {
+                    my $codon = $1;
+                    my $j = $-[0] + 1;
+                    my $i = $msa2ref{$j};
+                    my $this = $map{$ref}->{$i};
+                    if($this)
+                    {
+                        $pos = $this;
+                    }else
+                    {
+                        $pos += 1/1e6;
+                    }
+                    $pos{$pos}++;
+                    $hit{$id}->{$pos} = $codon;
+                }
+            }
         ##################################################
     }
 }
