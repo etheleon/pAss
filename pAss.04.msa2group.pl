@@ -1,22 +1,24 @@
 #!/usr/bin/env perl
-use strict;
 
-use v5.10;
+use lib '/export2/home/uesu/perl5/lib/perl5';
+use Modern::Perl '2014';
+use autodie;
+use Statistics::R;
 
 die "usage: $0 megan.aln out.prefix\n" unless $#ARGV == 1;
 my $in = shift;
 my $prefix = shift;
 
-my $kmer = 25;
-my $step = 5;
+my $kmer         = 25;
+my $step         = 5;
 my $too_much_gap = 10;
-my $min_reads = 10;
-my $skip = 0.1;
-#my $gap_skip = int($kmer * $skip);
-my $gap_skip = 4;
+my $min_reads    = 10;
+my $skip         = 0.1;
+#my $gap_skip    = int($kmer * $skip);
+my $gap_skip     = 4;
 
-open(IN, $in) or die;
-my %aln = <IN>;
+open my $IN, "<", $in;
+my %aln = <$IN>;
 my @seq = values %aln;
 my $total = scalar @seq;
 if($total < $min_reads)
@@ -41,15 +43,15 @@ if($gap_ratio >= $too_much_gap)
 	exit;
 }
 
-open RAW, ">$prefix.csv" or die;
-print RAW "position,nseq,ngroup,total\n";
-open DIS, ">$prefix.dist.csv" or die;
-print DIS "position,nseq,gsize\n";
-my $aln_size = length($seq[0]);
+open RAW, ">$prefix.csv";
+say RAW "position,nseq,ngroup,total";
+open DIS, ">$prefix.dist.csv";
+say DIS "position,nseq,gsize";
 
+my $aln_size = length($seq[0]);
 for my $i(0..($aln_size - $kmer)/$step) #the number of windows
 {
-	my $nseq;
+	my $nseq = 0;
 	my %group;
 	my $pos = $i * $step;
 	for my $seq(@seq)
@@ -71,11 +73,15 @@ for my $i(0..($aln_size - $kmer)/$step) #the number of windows
 		}
 	}
 }
-
-my $lines = "wc -l $prefix.csv";
+my $R = Statistics::R->new();
+my ($lines) = `wc -l $prefix.csv` =~ m/^(\d+)/;
 if($lines > 1)
 {
-system(qq(echo 'd <- read.csv("$prefix.csv"); pdf("$prefix.1.pdf"); with(d, plot(nseq, ngroup)); abline(0,1); dev.off(); pdf("$prefix.2.pdf", w = 10); par(mfrow=c(2,1), mar=c(4,4,1,3)); with(d, plot(position, ngroup)); with(d, plot(position, nseq))' | R --vanilla));
+$R->run(qq`attach(read.csv("$prefix.csv"))`);
+$R->run(qq`pdf("$prefix.1.pdf");plot(nseq, ngroup);abline(0,1);dev.off()`);
+$R->run(qq`pdf("$prefix.2.pdf", w = 10); par(mfrow=c(2,1), mar=c(4,4,1,3)); plot(position, ngroup); plot(position, nseq)`);
 }
-#system(qq(echo 'd <- read.csv("$prefix.csv"); pdf("$prefix.2.pdf", w = 20, h = 8, pointsize=8); par(mfrow=c(2,1), mar=c(4,4,1,3)); with(d, plot(position, ngroup)); with(d, plot(position, nseq))' | R --vanilla));
+
+__END__
+system(qq(echo 'd <- read.csv("$prefix.csv"); pdf("$prefix.2.pdf", w = 20, h = 8, pointsize=8); par(mfrow=c(2,1), mar=c(4,4,1,3)); with(d, plot(position, ngroup)); with(d, plot(position, nseq))' | R --vanilla));
 

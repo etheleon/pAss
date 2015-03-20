@@ -4,9 +4,9 @@ pAss - protein-guided Assembler
 Method for counting genes from a metagenomic survey
 
 ## Dependencies
-MEGAN
+* MEGAN
+* Muscle 
+* Perl 
+ * Set::IntervalTree (GCC > 4.1.2)
 
-Muscle 
 
-Perl 
- * Set::IntervalTree - this requires GCC newer than 4.1.2.
