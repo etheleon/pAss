@@ -10,7 +10,6 @@ use Statistics::Basic qw/mean stddev/;
 use Data::Dumper;
 use List::MoreUtils qw/uniq/;
 
-my $ii=0;
 #main methods
 #1
 sub storeRefseq($self){
@@ -128,11 +127,6 @@ sub buildContigMSA($self){
                 }
                 $offset += length $continuousSeq;
             }
-            #if($refseqID eq 'ref|YP_002946110.1|'){
-                #my %mapping = $self->{refseq}{$refseqID}{ntMSALoc}->%*;
-                #say "checking $_\t$mapping{$_}" for keys %mapping;
-                #exit 1;
-            #}
 
             ###################################################
             #Step2: NT Contigs
@@ -169,12 +163,6 @@ sub buildContigMSA($self){
                             $self->{contigs}{$contigID}{globalCoordinates}{$aaXaa} = $+{codon};
                         }else
                         {
-                            say "Contig: $contigID ::Reference $alignmentFile\n$contigSequence";
-                            say "position: $msaLoc";
-                            say "msa: \n", substr($contigSequence, 0, $msaLoc+2);
-                            say substr($self->{refseq}{$refseqID}{seq}, $aa);
-                            sleep 1000;
-                            $ii++;
                             #if there isnt any match of aa then increment the position by 1/1e6
                             $aaXaa+=1/1e6;
                             #say "doesnt exists: $contigID\t$aaXaa";
@@ -182,21 +170,14 @@ sub buildContigMSA($self){
                         }
                         $self->{pos}{$aaXaa}++;
                     }
-                    #if($contigID eq'contig00049' && $isComplement)
-                    #{
-                        #my %mapping = $self->{contigs}{$contigID}{globalCoordinates}->%*;
-                        #say "checking\t$_\t$mapping{$_}" for keys %mapping;
-                        #exit 1;
-                    #}
                 }else{
                     next
-                };
+                }
             }
         }else{
             next
         }
     }
-    say $ii;
 }
 
 
@@ -216,25 +197,6 @@ sub minmax($self){
     print "#\tMAX ref length: ",$self->max,"\n";
 }
 
-#0       M
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#1       M A
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#2       M A V
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#3       M A V G
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#10      M A V G D
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#11      M A V G D V
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#12      M A V G D V T
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#13      M A V G D V T M
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#14      M A V G D V T M P
-#MAVG------DVTMPQMHVVKGVKIGSTEAYVRYQNRRDLVIFEFAEGSNVAGVFTQNAF
-#15      M A V G D V T M P Q
 
 has pos => (
     is => 'rw',
