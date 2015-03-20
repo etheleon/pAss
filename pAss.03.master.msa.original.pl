@@ -28,7 +28,7 @@ while(<IN>)
 
 		$id = $1 if $id =~ m/(ref\|(.+?)\|)/;
 		$seq =~ s/\s+//g;
-		$seq{$id} = uc $seq;
+		$seq{$id} = $seq;
 		$len{$id} = length $seq;
 	}
 }
@@ -115,12 +115,12 @@ $/ = $term;
 
 print STDERR "mapping raw DNA sequences to MSA coordinates\n";
 my %hit;
-my %msa2ref;
 my $ref;
 my %pos;
 #my $xx;
 for my $msaf(glob("$msadir/alignment-*"))
 {
+    my %msa2ref;
 #	$xx++;
 #	last if $xx > 30;
 	print STDERR "$msaf\n";
@@ -135,7 +135,7 @@ for my $msaf(glob("$msadir/alignment-*"))
 		{
 			my $id = $1;
 			my $seq = $2;
-			$seq = uc $seq;
+			$seq = $seq;
 			$seq =~ s/\s+//g;
 
 			my $pos = 0;
