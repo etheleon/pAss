@@ -3,12 +3,13 @@
 use Modern::Perl '2014';
 use autodie;
 
-die "usage: $0 query_file blast_file output.dir\n" unless $#ARGV == 2;
+die "usage: $0 query_file blast_file output.dir MEGAN\n" unless $#ARGV == 2;
 
-my ($query, $blast, $out) = @ARGV;
+my ($query, $blast, $out, $megan) = @ARGV;
 
 die unless -f $query;
 die unless -f $blast;
+die unless -f $megan;
 
 my $temp = rand().time();
 my $CMD = join '', <DATA>;
@@ -35,8 +36,7 @@ while($signal != 0)
     unlink "$out.lock" if -e "$out.lock";
     unlink "$out.log" if -e "$out.log";
     unlink "$out.err" if -e "$out.err";
-    #$signal = system("xvfb-run -n $scr -f $out.lock -e $out.log ~/temp/megan/MEGAN +g -d -E < $temp");
-    $signal = system("xvfb-run -n $scr -f $out.lock -e $out.log ~/local/megan/MEGAN -g -d -E < $temp");
+    $signal = system "xvfb-run -n $scr -f $out.lock -e $out.log ~/local/megan/MEGAN -g -d -E  -c $temp";
     unless($signal == 0)
     {
         system("mv $out.log $out.err");
