@@ -14,11 +14,11 @@ die unless -f $megan;
 
 my $temp = rand().time();
 
-prep($blast, $temp, $query, $out, $megan);
-runMegan($src, $out, $temp, $stdFile, $megan, 1);
+prep();
+runMegan(1);
 
-sub runMegan ($src, $out, $temp, $megan, $count){
-    $count < 20 ? $count++ : return;
+sub runMegan ($count){
+    $count < 20 ? $count++ : eval{say "$query has failed";return};
 
     unlink "$out.lock" if -e "$out.lock";
     unlink "$out.log" if -e "$out.log";
@@ -31,19 +31,19 @@ sub runMegan ($src, $out, $temp, $megan, $count){
     my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
 
     #cant check for xvfb-run's own error [xc's version]
-    $signal =~ m/Writing/sm ? eval{unlink "$out.lock", $temp, "$temp.rma": return} : runMegan($src, $out, $temp, $stdFile, $megan, $count);
+    $signal =~ m/Writing/sm ? eval{say $signal; unlink "$out.lock", $temp, "$temp.rma"; return} : runMegan($count);
 }
 
-sub prep ($blast, $temp, $query, $out, $megan){
+sub prep {
     my $CMD = join '', <DATA>;
     $CMD =~ s/blastx.txt/$blast/;   #text file
     $CMD =~ s/blastx.rma/$temp.rma/;
     $CMD =~ s/query.fna/$query/;
     $CMD =~ s/example/$out/;
 
-    open my $cmd, ">$temp" or die;
-    print $cmd $CMD;
-    close my $cmd;
+    open my $cmdIO, ">", $temp;
+    print $cmdIO $CMD;
+    close $cmdIO;
 
     mkdir $out unless -d $out;
 }
