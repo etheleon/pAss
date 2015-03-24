@@ -31,7 +31,7 @@ sub runMegan ($count){
     my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
 
     #cant check for xvfb-run's own error [xc's version]
-    $signal =~ m/Writing/sm ? eval{say $signal; unlink "$out.lock", $temp, "$temp.rma"; return} : runMegan($count);
+    $signal =~ m/Writing/sm ? eval{unlink "$out.lock", $temp, "$temp.rma"; return} : runMegan($count);
 }
 
 sub prep {
