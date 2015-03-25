@@ -72,12 +72,11 @@ sub runMuscle($self){
 
     say STDERR "##\t ::b:: Generate MSA with Muscle";
     print STDERR '#' x 50;
-    #system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa"                                                            ;
+    system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa"                                                            ;
     print STDERR '#' x 50;
     say STDERR "";
 
-    #my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
-    my $MUSCLEinput=Bio::SeqIO->new(-file=>"/export2/home/uesu/github/pAss/test/xc_modified.out.temp.ref.msa", -format=>"fasta")                                                    ;
+    my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
     while(my $seqObj = $MUSCLEinput->next_seq)                                                                                       {
         my $seq = $seqObj->seq                                                                                          ;
         my $refseqID = $seqObj->display_id                                                                                    ;
