@@ -32,7 +32,7 @@ say STDERR "## ::4:: MAPPING CONTIGS TO REF PROT MSA"                           
 
 my $Finalout=Bio::SeqIO->new(-file=>">$out.msa",-format=>"fasta")                                                           ;
 $Finalout->width(10000);
-foreach my $contigID (keys $alignment->{contigs}->%*)
+foreach my $contigID (sort keys $alignment->{contigs}->%*)
 {
     my @contigSeq;
     my $contigObj = Bio::Seq->new(

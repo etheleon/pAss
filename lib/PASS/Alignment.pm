@@ -76,7 +76,8 @@ sub runMuscle($self){
     print STDERR '#' x 50;
     say STDERR "";
 
-    my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
+    #my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
+    my $MUSCLEinput=Bio::SeqIO->new(-file=>"/export2/home/uesu/github/pAss/test/xc_modified.out.temp.ref.msa", -format=>"fasta")                                                    ;
     while(my $seqObj = $MUSCLEinput->next_seq)                                                                                       {
         my $seq = $seqObj->seq                                                                                          ;
         my $refseqID = $seqObj->display_id                                                                                    ;
@@ -106,6 +107,7 @@ sub buildContigMSA($self){
         my $isGood = $self->{refseq}{$refseqID}{safe};
         if($isReferenceSeq && $isGood)
         {
+            delete $self->{refseq}{$refseqID}{ntMSALoc};
             my $fullAlignment = $seqObj->seq;
             my $offset = 0;
             while($fullAlignment =~ m/(?<continuousAA>(?<codon>[^-]--)+)/g)
