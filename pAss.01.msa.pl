@@ -13,13 +13,17 @@ die unless -f $blast;
 die unless -f $megan;
 
 my $temp = rand().time();
-
 prep();
 runMegan(1);
 
-sub runMegan ($count){
-    $count < 20 ? $count++ : eval{say "$query has failed";return};
-
+sub runMegan ($count)
+{
+    if($count <= 20){
+        $count++;
+    }else{
+        say STDERR "$query has failed";
+        exit 1;
+    };
     unlink "$out.lock" if -e "$out.lock";
     unlink "$out.log" if -e "$out.log";
 
@@ -29,9 +33,16 @@ sub runMegan ($count){
     $scr = int(30000 * rand()) while -e "/tmp/.X$scr-lock";
 
     my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
-
     #cant check for xvfb-run's own error [xc's version]
-    $signal =~ m/Writing/sm ? eval{unlink "$out.lock", $temp, "$temp.rma"; return} : runMegan($count);
+    if($signal =~ m/Writing \d+ reads to file/sm)
+    {
+        unlink "$out.lock", $temp, "$temp.rma";
+        exit 1;
+    }else{
+        say STDERR "reattempt";
+        say STDERR $signal;
+        runMegan($count);
+    }
 }
 
 sub prep {
