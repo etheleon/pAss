@@ -7,7 +7,6 @@ use experimental qw/signatures postderef/;
 use namespace::clean;
 use Bio::SeqIO;
 use Statistics::Basic qw/mean stddev/;
-use Data::Dumper;
 use List::MoreUtils qw/uniq/;
 
 #main methods
