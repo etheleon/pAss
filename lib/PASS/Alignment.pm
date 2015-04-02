@@ -8,30 +8,39 @@ use namespace::clean;
 use Bio::SeqIO;
 use Statistics::Basic qw/mean stddev/;
 use List::MoreUtils qw/uniq/;
+use Data::Dumper;
 
 #main methods
 #1
 sub storeRefseq($self){
-    my $dbin = Bio::SeqIO->new(-file=>$self->refseqFasta, -format=>"fasta")                                                       ;
-    while(my $seqObj = $dbin->next_seq)                                                                                     {
-        my $refseqID = $self->grepRefSeqID($seqObj->display_id)                                                                                        ;
+    my $dbin = Bio::SeqIO->new(-file=>$self->refseqFasta, -format=>"fasta");
+    while(my $seqObj = $dbin->next_seq)
+    {
+        my $refseqID = $self->grepRefSeqID($seqObj->display_id);
         $self->{refseq}{$refseqID} = {seq => $seqObj->seq, length => $seqObj->length}
     };
 }
 #2
 sub assignContig2ref ($self){
     $self->minmax;
-    for my $alignmentFile ($self->alignmentFiles->@*){
-        my $msaFile = (split /\//, $alignmentFile)[-1]                                                                              ;
-        my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta')                                                              ;
-# PROTEIN SEQUENCE
-        my $refObj = $in->next_seq                                                                                              ;
-        my $refseqID = $self->grepRefSeqID($refObj->display_id);
 
+    for my $alignmentFile ($self->alignmentFiles->@*)
+    {
+        my $msaFile = (split /\//, $alignmentFile)[-1];
+        my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta');
+# PROTEIN SEQUENCE
+        my $refObj = $in->next_seq;
+        my $refseqID = $self->grepRefSeqID($refObj->display_id);
+        #Some KOs cannot proceed because
+        #1. left out cause their reference sequences are all the same length; SD is low and the alignment length is not the length
+        #2. Too little reference sequences
+        #etc.
         my $isCorrectLength = $self->{refseq}{$refseqID}{length} > $self->min &&  $self->{refseq}{$refseqID}{length} < $self->max;
         #refseq sequences shd be trimmed because ltr we will pivot the choice of alignment based on whther the sequence is too long;
         $self->{refseq}{$refseqID}{safe} = $isCorrectLength ? 1 : 0;
         next unless $isCorrectLength;
+
+
 # PARSE CONTIG MSA (DNA)
         while(my $seqObj = $in->next_seq){
             my $contigID  =  $seqObj->display_id;
@@ -48,7 +57,7 @@ sub assignContig2ref ($self){
             if(!exists $self->{contigs}{$contigID}){
                 $self->{contigs}{$contigID} = $contigDetails;
             }else{
-                my $isBetterMatch = $contigDetails->{len} > $self->{contigs}{$contigID}{len}                                                       ;
+                my $isBetterMatch = $contigDetails->{len} > $self->{contigs}{$contigID}{len};
                 if ($isBetterMatch){
                     #say "Found better match";
                     $self->{contigs}{$contigID} = $contigDetails
@@ -57,7 +66,7 @@ sub assignContig2ref ($self){
 sub runMuscle($self){
     #muscle is heuristic, each run will give you a different output
     my $out = $self->outputPrefix;
-    my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa", -fasta => "fasta")                                           ;
+    my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa", -fasta => "fasta");
     $MSAout->width(1000);
     my @protRef = uniq map {$self->{contigs}{$_}{parentREF}} keys $self->contigs->%*;
     say "number of reference sequences included: ", scalar @protRef;
@@ -69,11 +78,11 @@ sub runMuscle($self){
         $MSAout->write_seq($outputSeq);
     }
 
-    say STDERR "##\t ::b:: Generate MSA with Muscle";
-    print STDERR '#' x 50;
-    system "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa"                                                            ;
-    print STDERR '#' x 50;
-    say STDERR "";
+    say     STDERR "##\t ::b:: Generate MSA with Muscle";
+    print   STDERR '#' x 50;
+    system  "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa";
+    print   STDERR '#' x 50;
+    say     STDERR "";
 
     my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
     while(my $seqObj = $MUSCLEinput->next_seq)                                                                                       {
@@ -237,6 +246,7 @@ has min=>(
 is=>'rw',
 default=>0,
 );
+
 has max=>(
 is=>'rw',
 default=>0,
