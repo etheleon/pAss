@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-use lib '/export2/home/uesu/perl5/lib/perl5';
+
 use Modern::Perl '2014';
 use autodie;
 use Statistics::R;
@@ -9,13 +9,13 @@ die "usage: $0 megan.aln out.prefix\n" unless $#ARGV == 1;
 my $in = shift;
 my $prefix = shift;
 
-my $kmer         = 25;
-my $step         = 5;
+my $kmer = 25;
+my $step = 5;
 my $too_much_gap = 10;
-my $min_reads    = 10;
-my $skip         = 0.1;
-#my $gap_skip    = int($kmer * $skip);
-my $gap_skip     = 4;
+my $min_reads = 10;
+my $skip = 0.1;
+#my $gap_skip = int($kmer * $skip);
+my $gap_skip = 4;
 
 open my $IN, "<", $in;
 my %aln = <$IN>;
@@ -49,9 +49,10 @@ open DIS, ">$prefix.dist.csv";
 say DIS "position,nseq,gsize";
 
 my $aln_size = length($seq[0]);
+
 for my $i(0..($aln_size - $kmer)/$step) #the number of windows
 {
-	my $nseq = 0;
+	my $nseq;
 	my %group;
 	my $pos = $i * $step;
 	for my $seq(@seq)
