@@ -1,0 +1,54 @@
+#!/usr/bin/env perl
+
+use Modern::Perl '2015';
+use experimental qw/signatures/;
+use Pod::Usage;
+use autodie;
+use Getopt::Lucid qw/:all/;
+
+my @specs = (
+contigs
+)
+
+
+
+#pAss00:: Run Blast
+system "p";
+
+=pod
+
+=head1 NAME
+
+    maxDiversity
+
+
+=head1 DESCRIPTION
+
+    Before running the pipeline you are required to have the following set up:
+
+    Protein Reference Sequences in should be sorted by their KOs into fastaFiles
+
+    the NEWBLER contigs should be in found in a root directory separated by KO ids
+
+    root/directory
+    |-- K00001
+    |   |-- 454AllContigs.fna
+    |   |-- 454AllContigs.qual
+    |   |-- 454ContigGraph.txt
+    |   |-- ...
+    |   `-- sff
+    |-- K00002
+    |   |-- 454AllContigs.fna
+    |   |-- 454AllContigs.qual
+    |   |-- 454ContigGraph.txt
+    |   |-- ...
+    |   `-- sff
+
+=head1 OPTIONS
+
+=back 4
+
+=over
+
+=cut
+

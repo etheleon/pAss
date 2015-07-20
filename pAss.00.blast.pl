@@ -2,16 +2,15 @@
 
 use Modern::Perl '2015';
 use experimental qw/signatures/;
-#use Parallel::ForkManager
+use Parallel::ForkManager;
 use Pod::Usage;
 use autodie;
 use Getopt::Lucid qw(:all);
 
-
 my @specs = (
     Param("kodb|d")->default("/export2/home/uesu/db/konr"),
 #    Param("threads|t")->default(1),
-    Param("batch|b")->default("/export2/home/uesu/reDiamond/batch/assm.0300"),
+    Param("batch|b")->default("pAss00_BATCH"),
     Param("contigs|c")->default("/export2/home/uesu/reDiamond/out/assm.0200.newbler"),
     Param("output|o")->default("/export2/home/uesu/reDiamond/out/assm.0300"),
     Switch("format|f")->default(0),
@@ -26,21 +25,19 @@ $|++;
 my $kodb         = $opt->get_kodb;
 my %kohash;
 
-
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
 {
     m/ko:K\d{5}/;
     $kohash{$&}++;
     if($opt->get_format){
-        system "formatdb -i $kodb/$& -o T -n $kodb/$&";
+        system "formatdb -i $kodb/$& -o T - $kodb/$&";
         say STDERR $_;
     }
 }
 say STDERR "stored KOs";
 
 open my $batchOutput, ">", $opt->get_batch;
-
 runBLAST($_, $opt->get_contigs, $opt->get_output) for keys %kohash;
 
 sub runBLAST($ko, $contigPath, $output)
