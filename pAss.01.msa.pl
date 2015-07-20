@@ -8,7 +8,7 @@ use Getopt::Lucid qw( :all );
 
 my @specs =(
     Param("queryFasta|q"),
-    Param("blastFile|o"),
+    Param("blastFile|b"),
     Param("output|o"),
     Param("megan|m"),
     Switch ("help|h")
@@ -16,6 +16,7 @@ my @specs =(
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
+$opt->validate({'requires' => ['queryFasta', 'blastFile', 'output', 'megan']});
 
 my $query = $opt->get_queryFasta;
 my $blast = $opt->get_blastFile;
@@ -98,6 +99,7 @@ sub prep {
 
     path to megan executable
 
+=back
 =cut
 
 __END__
