@@ -10,7 +10,7 @@ my @specs =(
     Param("queryFasta|q"),
     Param("blastFile|o"),
     Param("output|o"),
-    Param("megan|m"),
+    Param("megan|m")->default("/export2/home/uesu/local/megan/MEGAN"),
     Switch ("help|h")
 );
 
@@ -78,9 +78,11 @@ sub prep {
 
 =head1 NAME
 
-    refMSA
+    refMSA - constructing refseq MSA
 
-=head1 Aligns contig sequences with ortholog group reference sequences using megan
+=head1 SYPNOSIS
+
+    Aligns contig sequences with ortholog group reference sequences using megan
 
 =head1 OPTIONS
 
