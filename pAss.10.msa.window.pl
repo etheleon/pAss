@@ -8,14 +8,14 @@ use Array::Utils qw(:all);
 use Method::Signatures;
 use Set::IntervalTree;
 
-die "usage: $0 min_leng[integer] msa.file\n" unless $#ARGV == 1;
+die "usage: $0 min_leng[integer] msa.file outputDir\n" unless $#ARGV == 2;
 ##################################################
 #+------------------------------------------------
 #Init
 #+------------------------------------------------
 ##################################################
 
-my ($minLength, $inputFile) = @ARGV;    #cutRegionSize, input.msa
+my ($minLength, $inputFile, $outputDir) = @ARGV;    #cutRegionSize, input.msa
 my $msalength;  #length of msa
 my %seq;        #hash ref storing sequence information
 my %nnucl;      #depth at postion i of MSA
@@ -45,8 +45,11 @@ my $max_seq = max map {windowDepth($_, 10)} (9..$msalength);
 my $nseq    = scalar keys %seq;
 
 #Step3
+mkdir $outputDir unless -d $outputDir;
+my $outputFile = "$outputDir".'/'.$KO;
+open my $output, ">", "$outputFile";
 #Calculate window statistics
-say join "\t", qw(ko msaTotSeq start end maxSeq.10bp seqInSameWindow newCut lens);
+say $output join "\t", qw(ko msaTotSeq start end maxSeq.10bp seqInSameWindow newCut lens);
 slidingWindow($_) for (0..($msalength-$minLength));
 
 ##################################################
@@ -118,7 +121,7 @@ func tryCutSize($cut, $startingPosition)
                 $ns,                # the number of sequences spanning window
                 $cut,
                 $lens);             # the average length of the spanning sequences excluding gaps
-                say join "\t", @row;
+                say $output join "\t", @row;
             }else
             {
                 $cut += int max(1, $minLength - $lens + 1);
