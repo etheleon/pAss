@@ -13,7 +13,9 @@ use Data::Dumper;
 #main methods
 #1
 sub storeRefseq($self){
-    my $dbin = Bio::SeqIO->new(-file=>$self->refseqFasta, -format=>"fasta");
+    my $dbin = Bio::SeqIO->new(
+        -file=>$self->refseqFasta,
+        -format=>"fasta");
     while(my $seqObj = $dbin->next_seq)
     {
         my $refseqID = $self->grepRefSeqID($seqObj->display_id);
@@ -21,7 +23,7 @@ sub storeRefseq($self){
     };
 }
 #2
-sub assignContig2ref ($self){
+sub assignContig2ref($self){
     $self->minmax;
 
     for my $alignmentFile ($self->alignmentFiles->@*)

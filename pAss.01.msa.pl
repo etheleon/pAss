@@ -2,21 +2,36 @@
 
 use Modern::Perl '2015';
 use autodie;
+use Pod::Usage;
 use experimental qw/signatures/;
+use Getopt::Lucid qw( :all );
 
-die "usage: $0 query_file blast_file output.dir MEGAN\n" unless $#ARGV == 3;
+my @specs =(
+    Param("queryFasta|q"),
+    Param("blastFile|o"),
+    Param("output|o"),
+    Param("megan|m"),
+    Switch ("help|h")
+);
 
-my ($query, $blast, $out, $megan) = @ARGV;
+my $opt = Getopt::Lucid->getopt( \@specs );
+pod2usage(-verbose=>2) if $opt->get_help;
+
+my $query = $opt->get_queryFasta;
+my $blast = $opt->get_blastFile;
+my $out = $opt->get_output;
+my $megan = $opt->get_megan;
 
 die unless -f $query;
 die unless -f $blast;
 die unless -f $megan;
 
 my $temp = rand().time();
-prep();
-runMegan(1);
 
-sub runMegan ($count)
+&prep();
+&runMegan();
+
+sub runMegan ($count = 1)
 {
     if($count <= 20){
         $count++;
@@ -58,6 +73,32 @@ sub prep {
 
     mkdir $out unless -d $out;
 }
+
+=pod
+
+=head1 NAME
+
+    refMSA
+
+=head1 Aligns contig sequences with ortholog group reference sequences using megan
+
+=head1 OPTIONS
+
+=over 4
+
+=item --queryFasta -q
+
+    the fastaFile containing contigs
+
+=item --blastFile -b
+
+    the output from blasting contigs against reference sequences
+
+=item --megan -m
+
+    path to megan executable
+
+=cut
 
 __END__
 import blastFile='blastx.txt' fastaFile='query.fna' meganFile='blastx.rma' maxMatches=25 minScore=50.0 maxExpected=1.0 topPercent=100.0 minSupport=1 minComplexity=0.30 useSeed=false useCOG=false useKegg=false paired=false useIdentityFilter=false textStoragePolicy=1 blastFormat=BlastX mapping='Taxonomy:BUILT_IN=true';

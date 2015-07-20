@@ -11,7 +11,7 @@ die "$0 <#threads> <diamond DB without fileExtention> <fastQFILE> <scratch> <scr
 my ($threads, $nrDB, $fq, $scratch, $outputFile, $storageDir) = @ARGV;
 mkdir $storageDir unless -d $storageDir;
 #print "diamond blastx -v -p $threads -d $nrDB -q $fq -o $outputFile -t $scratch --index-chunks 1", "\n";
-system "diamond blastx -v -p $threads -d $nrDB -q $fq -o $outputFile -t $scratch --index-chunks 2";
+system "/export2/home/uesu/local/bin/diamond blastx -v -p $threads -d $nrDB -q $fq -o $outputFile -t $scratch --index-chunks 2";
 my $filename = (split /\//, $outputFile)[-1];
 #print "mv $outputFile $storageDir/$filename", "\n";
 system "mv $outputFile $storageDir/$filename";
