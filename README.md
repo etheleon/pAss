@@ -28,7 +28,6 @@ The scripts should be run in series from 00 to XX.
 | pAss.01     | Calls MEGAN to output the blastx alignment of contigs same KO Refseq sequences                                                                 |
 | pAss.03     | Calls the PASS::Alignment package; Details below                                                                                               |
 | pAss.04     | Generates diagnostic plots                                                                                                                     |
-| pAss.10     | Determines coordinates for MAX Diversity                                                                                                       |
 | pAss.11     | Diagnostic                                                                                                                                     |
 | pAss.12     | Outputs as fasta MAX DIVERSITY region for each contig                                                                                          |
 
