@@ -1,53 +1,104 @@
 #!/usr/bin/env perl
-use strict;
 
-die "usage: $0 query_file blast_file output.dir\n" unless $#ARGV == 2;
+use Modern::Perl '2015';
+use autodie;
+use Pod::Usage;
+use experimental qw/signatures/;
+use Getopt::Lucid qw( :all );
 
-my $query = shift;
-my $blast = shift;
-my $out = shift;
+my @specs =(
+    Param("queryFasta|q"),
+    Param("blastFile|o"),
+    Param("output|o"),
+    Param("megan|m"),
+    Switch ("help|h")
+);
+
+my $opt = Getopt::Lucid->getopt( \@specs );
+pod2usage(-verbose=>2) if $opt->get_help;
+
+my $query = $opt->get_queryFasta;
+my $blast = $opt->get_blastFile;
+my $out = $opt->get_output;
+my $megan = $opt->get_megan;
 
 die unless -f $query;
 die unless -f $blast;
+die unless -f $megan;
 
 my $temp = rand().time();
-my $CMD = join('', <DATA>);
-$CMD =~ s/blastx.txt/$blast/;
-$CMD =~ s/blastx.rma/$temp.rma/;
-$CMD =~ s/query.fna/$query/;
-$CMD =~ s/example/$out/;
-open CMD, ">$temp" or die;
-print CMD $CMD;
-close CMD;
-mkdir $out;
 
+&prep();
+&runMegan();
 
-my $i;
-my $signal = -1;
-while($signal != 0)
+sub runMegan ($count = 1)
 {
-    $i++;
-    my $scr = int(30000 * rand());
-    while(-e "/tmp/.X$scr-lock")
-    {
-        $scr = int(30000 * rand());
-    }
-    unlink "$out.lock";
-    unlink "$out.log";
-    unlink "$out.err";
-    #$signal = system("xvfb-run -n $scr -f $out.lock -e $out.log ~/temp/megan/MEGAN +g -d -E < $temp");
-    $signal = system("xvfb-run -n $scr -f $out.lock -e $out.log ~/local/megan/MEGAN -g -d -E < $temp");
-    unless($signal == 0)
-    {
-        system("mv $out.log $out.err");
-        system("echo $signal >> $out.err");
-    }
-    unlink "$out.lock";
-    last if $i > 20;
-}
-unlink $temp;
-unlink "$temp.rma";
+    if($count <= 20){
+        $count++;
+    }else{
+        say STDERR "$query has failed";
+        exit 1;
+    };
+    unlink "$out.lock" if -e "$out.lock";
+    unlink "$out.log" if -e "$out.log";
 
+    my $scr = int(30000 * rand());
+
+    #try new screen number if its taken;
+    $scr = int(30000 * rand()) while -e "/tmp/.X$scr-lock";
+
+    my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
+    #cant check for xvfb-run's own error [xc's version]
+    if($signal =~ m/Writing \d+ reads to file/sm)
+    {
+        unlink "$out.lock", $temp, "$temp.rma";
+        exit 1;
+    }else{
+        say STDERR "reattempt";
+        say STDERR $signal;
+        runMegan($count);
+    }
+}
+
+sub prep {
+    my $CMD = join '', <DATA>;
+    $CMD =~ s/blastx.txt/$blast/;   #text file
+    $CMD =~ s/blastx.rma/$temp.rma/;
+    $CMD =~ s/query.fna/$query/;
+    $CMD =~ s/example/$out/;
+
+    open my $cmdIO, ">", $temp;
+    print $cmdIO $CMD;
+    close $cmdIO;
+
+    mkdir $out unless -d $out;
+}
+
+=pod
+
+=head1 NAME
+
+    refMSA
+
+=head1 Aligns contig sequences with ortholog group reference sequences using megan
+
+=head1 OPTIONS
+
+=over 4
+
+=item --queryFasta -q
+
+    the fastaFile containing contigs
+
+=item --blastFile -b
+
+    the output from blasting contigs against reference sequences
+
+=item --megan -m
+
+    path to megan executable
+
+=cut
 
 __END__
 import blastFile='blastx.txt' fastaFile='query.fna' meganFile='blastx.rma' maxMatches=25 minScore=50.0 maxExpected=1.0 topPercent=100.0 minSupport=1 minComplexity=0.30 useSeed=false useCOG=false useKegg=false paired=false useIdentityFilter=false textStoragePolicy=1 blastFormat=BlastX mapping='Taxonomy:BUILT_IN=true';
