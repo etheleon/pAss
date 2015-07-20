@@ -31,6 +31,7 @@ my $temp = rand().time();
 
 &prep();
 &runMegan();
+system "rm $temp";
 
 sub runMegan ($count = 1)
 {
@@ -38,6 +39,7 @@ sub runMegan ($count = 1)
         $count++;
     }else{
         say STDERR "$query has failed";
+        system "rm $temp";
         exit 1;
     };
     unlink "$out.lock" if -e "$out.lock";
@@ -72,7 +74,7 @@ sub prep {
     print $cmdIO $CMD;
     close $cmdIO;
 
-    mkdir $out unless -d $out;
+    system"mkdir -p $out" unless -d $out;
 }
 
 =pod

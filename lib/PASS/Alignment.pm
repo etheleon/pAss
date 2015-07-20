@@ -30,7 +30,8 @@ sub assignContig2ref($self){
     {
         my $msaFile = (split /\//, $alignmentFile)[-1];
         my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta');
-# PROTEIN SEQUENCE
+
+#       PROTEIN SEQUENCE
         my $refObj = $in->next_seq;
         my $refseqID = $self->grepRefSeqID($refObj->display_id);
         #Some KOs cannot proceed because
