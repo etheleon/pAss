@@ -23,7 +23,7 @@ The pAss pipeline requires one to provide contigs grouped by the KEGG’s Orthol
 The scripts should be run in series from 00 to XX.
 
 | Script Name | Description                                                                                                                                    |
-| --          | ---                                                                                                                                            |
+| ---          | ---                                                                                                                                            |
 | pAss.00     | Given contigs assembled using reads binned into relavant KEGG orthologs we blast them against known reference sequences in the same categories |
 | pAss.01     | Calls MEGAN to output the blastx alignment of contigs same KO Refseq sequences                                                                 |
 | pAss.03     | Calls the PASS::Alignment package; Details below                                                                                               |
