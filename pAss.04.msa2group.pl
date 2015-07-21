@@ -1,13 +1,21 @@
 #!/usr/bin/env perl
 
-use lib '/export2/home/uesu/perl5/lib/perl5';
-use Modern::Perl '2014';
+use Modern::Perl '2015';
 use autodie;
 use Statistics::R;
+use experimental qw/signatures/;
+use Getopt::Lucid qw( :all );
 
-die "usage: $0 megan.aln out.prefix\n" unless $#ARGV == 1;
-my $in = shift;
-my $prefix = shift;
+my @specs = (
+    Param("megan|m"),
+    Param("outputPrefix|o")
+);
+
+my $opt = Getopt::Lucid->getopt( \@specs );
+pod2usage(-verbose=>2) if $opt->get_help;
+
+my $in     = $opt->get_megan;
+my $prefix = $opt->get_outputPrefix;
 
 my $kmer         = 25;
 my $step         = 5;
@@ -81,6 +89,35 @@ $R->run(qq`attach(read.csv("$prefix.csv"))`);
 $R->run(qq`pdf("$prefix.1.pdf");plot(nseq, ngroup);abline(0,1);dev.off()`);
 $R->run(qq`pdf("$prefix.2.pdf", w = 10); par(mfrow=c(2,1), mar=c(4,4,1,3)); plot(position, ngroup); plot(position, nseq)`);
 }
+
+=pod
+
+=head1 NAME
+    Some Name
+
+=head1 SYPNOSIS
+
+    Some SYPNOSIS
+
+=head1 OPTIONS
+
+=over 4
+
+=item --megan -m
+
+    path to alignment input files from MEGAN
+
+=item --outputPrefix -o
+
+    prefix (excluding the file extension) to the output files
+
+=back
+
+=head1 DESCRIPTION
+
+    Hate my PhD
+
+=cut
 
 __END__
 system(qq(echo 'd <- read.csv("$prefix.csv"); pdf("$prefix.2.pdf", w = 20, h = 8, pointsize=8); par(mfrow=c(2,1), mar=c(4,4,1,3)); with(d, plot(position, ngroup)); with(d, plot(position, nseq))' | R --vanilla));

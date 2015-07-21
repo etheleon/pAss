@@ -4,16 +4,42 @@ use Modern::Perl '2015';
 use experimental qw/signatures/;
 use Pod::Usage;
 use autodie;
+use Parallel::ForkManager;
 use Getopt::Lucid qw/:all/;
 
 my @specs = (
-contigs
-)
+Param("contigs|c"),
+Param("refseqKO|r")->default("/export2/home/uesu/db/konr/ko:"),
+Param("threads|t")->default(1),
+Param("prefix|p"),
+Switch("help|h")
+);
 
+my $opt = Getopt::Lucid->getopt( \@specs )->validate;
+pod2usage(-verbose=>2) if $opt->get_help;
+#$opt->validate({'requires' => ['', 'blastFile', 'output', 'megan']});
+my $refseqProtDB = $opt->get_refseqKO;
 
+my $MAX_PROCESSES = $opt->get_threads;
+say "## Using $MAX_PROCESSES threads";
 
 #pAss00:: Run Blast
-system "p";
+
+
+say "## Generating MSA";
+
+my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
+
+foreach my $ko (`ls out/pAss01/ | grep -v 'log'`)
+{
+    $pm->start and next;
+    chomp $ko;
+    #the concatenation of refseqProDB with KO, should be frowned upon
+    system "pAss/pAss.03.master.msa.pl -f $refseqProtDB$ko -m out/pAss01/$ko -o out/pAss03 -k $ko";
+    say STDERR "Done Processing $ko";
+    $pm->finish;
+}
+$pm->wait_all_children;
 
 =pod
 
@@ -21,14 +47,19 @@ system "p";
 
     maxDiversity
 
-
 =head1 DESCRIPTION
 
-    Before running the pipeline you are required to have the following set up:
+    Before running maxDiversity the following is required:
 
-    Protein Reference Sequences in should be sorted by their KOs into fastaFiles
+=over 4
 
-    the NEWBLER contigs should be in found in a root directory separated by KO ids
+=item Protein Reference Sequences
+
+    Prokaryotic sequences only,  grouped by KOs (eg. K00001.fa, K00002.fa)
+
+=item Contigs
+
+    Contigs should be in found in a root directory separated by KO ids (NEWBLER)
 
     root/directory
     |-- K00001
@@ -44,11 +75,33 @@ system "p";
     |   |-- ...
     |   `-- sff
 
+=back
+
 =head1 OPTIONS
 
-=back 4
+=over 4
 
-=over
+=item --contigs, -c
+
+    the
+
+=item --refseqKO, -r
+
+    the prefix to which to append the KO id eg. /export2/home/uesu/db/konr/ko:
+
+=item --threads, -t
+
+    the number of threads to use
+
+=item --prefix, -p
+
+    the location for all the intermediate files
+
+=item --help
+
+    throws up the help message
+
+=back
 
 =cut
 

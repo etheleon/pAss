@@ -25,7 +25,7 @@ my $msadir      = $opt->get_msadir                                             ;
 my $out         = $opt->get_out                                                ;
 my $ko = $opt->get_ko;
 
-my $out = $out."/$ko";
+$out .= "/$ko";
 
 my $alignment = PASS::Alignment->new(
     refseqFasta     =>  $refseqFasta, #reference sequences
