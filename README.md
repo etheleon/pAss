@@ -8,16 +8,26 @@ Method for counting genes from a metagenomic survey
 * [MEGAN](http://ab.inf.uni-tuebingen.de/software/megan/)
 * [Muscle](https://github.com/Homebrew/homebrew-science). Use `brew` for installation.
 * Perl
-    * >=v5.20.0 is required:
+    * v5.2X.X is required:
        * Use [tokuhirom/plenv](https://github.com/tokuhirom/plenv) to install a local version of the latest perl (>=5.21.0)
        * Install **CPANMINUS**, using `plenv install-cpanm`
 
     * Install dependencies
         * Install Carton using `$ cpanm Carton`.
         * run `carton` in package’s root directory
+
 * R for plots
 
-## Pipeline
+
+## Usage
+
+`$` denotes the terminal prompt
+
+```
+$ maxDiversity --contigs /path/to/assembled/ko/contigs --refseqKO path/to/ko/prot/db --threads 10 --prefix path/to/folder/for/containing/intermediate/files
+```
+
+## Description
 
 The pAss pipeline requires one to provide contigs grouped by the KEGG’s Ortholog groups built using NEWBLER (`runAssembly` >= 2.6 (20110517_1502)).
 The scripts should be run in series from 00 to XX.
