@@ -10,17 +10,20 @@ use Getopt::Lucid qw(:all);
 my @specs = (
     Param("kodb|d")->default("/export2/home/uesu/db/konr"),
 #    Param("threads|t")->default(1),
-    Param("batch|b")->default("pAss00_BATCH"),
+#    Param("batch|b")->default("pAss00_BATCH"),
     Param("contigs|c")->default("/export2/home/uesu/reDiamond/out/assm.0200.newbler"),
     Param("output|o")->default("/export2/home/uesu/reDiamond/out/assm.0300"),
     Switch("format|f")->default(0),
-    Switch ("help|h")
+    Switch ("help|h"),
+    Param("threads|t")->default(1)
 );
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
 
 $|++;
+
+my $pm = Parallel::ForkManager->new($opt->get_threads);
 
 my $kodb         = $opt->get_kodb;
 my %kohash;
@@ -37,8 +40,17 @@ for (<"$kodb/*">)
 }
 say STDERR "stored KOs";
 
-open my $batchOutput, ">", $opt->get_batch;
-runBLAST($_, $opt->get_contigs, $opt->get_output) for keys %kohash;
+#open my $batchOutput, ">", $opt->get_batch;
+for my $indivKO (keys %kohash)
+{
+
+    $pm->start and next;
+    runBLAST($indivKO, $opt->get_contigs, $opt->get_output);
+    $pm->finish;
+}
+
+$pm->wait_all_children;
+
 
 sub runBLAST($ko, $contigPath, $output)
 {
@@ -47,7 +59,7 @@ sub runBLAST($ko, $contigPath, $output)
     {
         return;
     }
-    say $batchOutput "blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx"
+    system "blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx"
 }
 
 =pod
