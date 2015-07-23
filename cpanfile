@@ -1,5 +1,4 @@
 requires 'Modern::Perl';
-requires 'Set::IntervalTree';
 requires 'Moo';
 requires 'Bio::SeqIO';
 requires 'Statistics::Basic';

@@ -8,39 +8,60 @@ use Parallel::ForkManager;
 use Getopt::Lucid qw/:all/;
 
 my @specs = (
-Param("contigs|c"),
-Param("refseqKO|r")->default("/export2/home/uesu/db/konr/ko:"),
-Param("threads|t")->default(1),
-Param("prefix|p"),
-Switch("help|h")
+    Param("outputDIR|o")->default();
+    Param("contigs|c"),
+    Param("refseqKO|r")->default("/export2/home/uesu/db/konr/"),
+    Param("threads|t")->default(1),
+    Param("prefix|p"),
+    Switch("help|h")
 );
 
 my $opt = Getopt::Lucid->getopt( \@specs )->validate;
 pod2usage(-verbose=>2) if $opt->get_help;
 #$opt->validate({'requires' => ['', 'blastFile', 'output', 'megan']});
+
+my $outputDir = $opt->get_outputDIR;
 my $refseqProtDB = $opt->get_refseqKO;
-
 my $MAX_PROCESSES = $opt->get_threads;
+
 say "## Using $MAX_PROCESSES threads";
+##################################################
+#Begin
+##################################################
 
-#pAss00:: Run Blast
+say "## Blasting";
+system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --format 0 --kodb $refseqProtDB";
 
+say "MEGAN aln";
+system "script/pAss.01.blast.pl";
 
 say "## Generating MSA";
-
 my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
 
-foreach my $ko (`ls out/pAss01/ | grep -v 'log'`)
+#need to change this; this is hard coded
+foreach my $ko (`ls out/pAss01/ | grep -v log`)
 {
     $pm->start and next;
     chomp $ko;
     #the concatenation of refseqProDB with KO, should be frowned upon
-    system "pAss/pAss.03.master.msa.pl -f $refseqProtDB$ko -m out/pAss01/$ko -o out/pAss03 -k $ko";
+    system "script/pAss.03.master.msa.pl -f $refseqProtDB/ko:$ko -m out/pAss01/$ko -o out/pAss03 -k $ko";
     say STDERR "Done Processing $ko";
     $pm->finish;
 }
 $pm->wait_all_children;
 
+say "## MSA statistics";
+my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);
+foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
+{
+    chomp $ko;
+    $pm2->start and next;
+    system "script/pAss.04.msa2group.pl --msa $outputDir/out/pAss03/$ko.msa --outputPrefix $outputDir/out/pAss04/$ko";
+    $pm2->finish;
+}
+$pm2->wait_all_children;
+
+#Documentation
 =pod
 
 =head1 NAME
