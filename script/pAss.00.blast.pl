@@ -9,10 +9,9 @@ use Getopt::Lucid qw(:all);
 
 my @specs = (
     Param("kodb|d")->default("/export2/home/uesu/db/konr"),
-#    Param("threads|t")->default(1),
-#    Param("batch|b")->default("pAss00_BATCH"),
-    Param("contigs|c")->default("/export2/home/uesu/reDiamond/out/assm.0200.newbler"),
-    Param("output|o")->default("/export2/home/uesu/reDiamond/out/assm.0300"),
+    Param("threads|t")->default(1),
+    Param("contigs|c"),
+    Param("output|o"),
     Switch("format|f")->default(0),
     Switch ("help|h"),
     Param("threads|t")->default(1)
@@ -20,13 +19,17 @@ my @specs = (
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
+$opt->validate({'requires' => ['format', 'contigs', 'kodb', 'output']});
 
 $|++;
 
 my $pm = Parallel::ForkManager->new($opt->get_threads);
 
+my $outputdir = $opt->get_output;
+system "mkdir $outputdir";
 my $kodb         = $opt->get_kodb;
 my %kohash;
+
 
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
@@ -34,13 +37,12 @@ for (<"$kodb/*">)
     m/ko:K\d{5}/;
     $kohash{$&}++;
     if($opt->get_format){
-        system "formatdb -i $kodb/$& -o T - $kodb/$&";
+        system "formatdb -i $kodb/$& -o T -n $kodb/$&";
         say STDERR $_;
     }
 }
 say STDERR "stored KOs";
 
-#open my $batchOutput, ">", $opt->get_batch;
 for my $indivKO (keys %kohash)
 {
 

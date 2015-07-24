@@ -17,7 +17,7 @@ Method for counting genes from a metagenomic survey
         * run `carton` in package’s root directory
 
 * R for plots
-
+* Blastn
 
 ## Usage
 
