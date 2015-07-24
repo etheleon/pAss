@@ -1,12 +1,14 @@
 #!/usr/bin/env perl
 
-use Modern::Perl '2014';
+use Modern::Perl '2015';
 use autodie;
 use Bio::SeqIO;
+use experimental qw/signatures postderef/;
 use List::Util qw(sum max);
 use Array::Utils qw(:all);
-use Method::Signatures;
 use Set::IntervalTree;
+use Pod::Usage;
+use Getopt::Lucid qw/:all/;
 
 die "usage: $0 min_leng[integer] msa.file outputDir\n" unless $#ARGV == 2;
 ##################################################
@@ -15,7 +17,18 @@ die "usage: $0 min_leng[integer] msa.file outputDir\n" unless $#ARGV == 2;
 #+------------------------------------------------
 ##################################################
 
-my ($minLength, $inputFile, $outputDir) = @ARGV;    #cutRegionSize, input.msa
+my @specs = (
+    Param("minLength|m")->default(200),
+    Param("inputFile|i"),
+    Param("outputDir"),
+    Switch("help|h")
+);
+my $opt = Getopt::Lucid->getopt( \@specs )->validate;
+pod2usage(-verbose=>2) if $opt->get_help;
+
+#my ($minLength, $inputFile, $outputDir) = @ARGV;    #cutRegionSize, input.msa
+my ($minLength, $inputFile, $outputDir) = ($opt->get_minLength, $opt->get_inputFile, $opt->get_outputDir)
+
 my $msalength;  #length of msa
 my %seq;        #hash ref storing sequence information
 my %nnucl;      #depth at postion i of MSA
@@ -30,12 +43,9 @@ my ($KO)    = $inputFile =~ m/(K\d{5})/;
 ##################################################
 
 #Step1: Parse MSA
-my $input = Bio::SeqIO->new(
-    -file => "$inputFile",
-    -format =>"fasta"
-);
+my $input = Bio::SeqIO->new(-file => "$inputFile",-format =>"fasta");
 
-while (my $seqObj= $input->next_seq)
+while (my $seqObj = $input->next_seq)
 {
     parseMSA($seqObj->display_id, $seqObj->seq)
 }
@@ -58,14 +68,14 @@ slidingWindow($_) for (0..($msalength-$minLength));
 #+------------------------------------------------
 ##################################################
 
-func parseMSA ($header,$seq)
+sub parseMSA ($header,$seq)
 {
     my $count   = ($seq=~s/([^\-])/$1/g); #length without gaps
     $msalength  = eval(length($seq) -1) unless defined $msalength;
     buildInterval($header, $seq) unless $count < $minLength;
 }
 
-func buildInterval ($header, $sequence)
+sub buildInterval ($header, $sequence)
 {
     if($sequence =~ m/^ (?<frontGap>-*) (?<body>.+?)    (?<endGap>-*)$/x)
     {
@@ -80,7 +90,7 @@ func buildInterval ($header, $sequence)
     }
 }
 
-func windowDepth ($position, $windowSize)
+sub windowDepth ($position, $windowSize)
 {
     my @winSize = (0..eval($windowSize-1));
     my $totsize = sum map { $nnucl{$position - $_} } @winSize;
@@ -88,7 +98,7 @@ func windowDepth ($position, $windowSize)
 }
 
 #stores sequences found in the window and announces the max size
-func slidingWindow ($startingPosition)
+sub slidingWindow ($startingPosition)
 {
     @starting = ();
     @starting = @{$tree->fetch($startingPosition, $startingPosition+1)};
@@ -96,7 +106,7 @@ func slidingWindow ($startingPosition)
     tryCutSize($minLength, $startingPosition);
 }
 
-func tryCutSize($cut, $startingPosition)
+sub tryCutSize($cut, $startingPosition)
 {
     my $endingPosition = $startingPosition + $cut;
     if ($endingPosition < $msalength)
@@ -133,7 +143,7 @@ func tryCutSize($cut, $startingPosition)
     }else{return}
 }
 
-func countNoGap($header, $starting, $length)
+sub countNoGap($header, $starting, $length)
 {
     my $sequence = $seq{$header};
     my $this     = substr($sequence, $starting, $length);

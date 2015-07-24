@@ -21,6 +21,12 @@ Method for counting genes from a metagenomic survey
 
 ## Usage
 
+In the examples folder, We have 100 KOs:
+
+1. assembled KO contigs (from NEWBLER)
+2. the Reference sequences grouped by their KEGG Ortholog Groups
+
+
 `$` denotes the terminal prompt
 
 ```
@@ -38,7 +44,8 @@ The scripts should be run in series from 00 to XX.
 | pAss.01     | Calls MEGAN to output the blastx alignment of contigs same KO Refseq sequences                                                                 |
 | pAss.03     | Calls the PASS::Alignment package; Details below                                                                                               |
 | pAss.04     | Generates diagnostic plots                                                                                                                     |
-| pAss.11     | Output MAX diversity sequence                                                                                                                                     |
+| pAss.10     | Scans for maxdiversity region                                                                                                                                      |
+| pAss.11     | Outputs MAX diversity sequence                                                                                                                                     |
 | pAss.12     | Outputs as fasta MAX DIVERSITY region for each contig                                                                                          |
 
 ## pAss.03 PASS::Alignment

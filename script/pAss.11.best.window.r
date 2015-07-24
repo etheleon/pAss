@@ -9,10 +9,11 @@
 
 #+ libraryload, message=FALSE, echo=FALSE
 library(ggplot2)
+theme_set(theme_bw())
 library(dplyr)
+library(magrittr)
 library(Biostrings)
 library(MetamapsDB)
-theme_set(theme_bw())
 
 
 #' ## Data processing
@@ -33,12 +34,13 @@ dir.create(outputDIR)
 
 #+ koBackground 
 ko = tail(strsplit(params[1], '/')[[1]], n=1)
-koInfo = koname(ko, minimal=FALSE)
+#koInfo = koname(ko, minimal=FALSE)
 
 #' For this report, the KO chosen is `r ko`, `r unique(koInfo$ko.definition)` which belongs to the above following pathways:
 
 #+
-koInfo$ko..pathway.name.
+#koInfo$ko..pathway.name.
+
 
 #' ## Choosing MSA loc to sample Diversity
 
