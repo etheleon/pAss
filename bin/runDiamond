@@ -1,0 +1,58 @@
+#!/usr/bin/env perl
+
+use Modern::Perl '2015';
+use Getopt::Lucid qw/:all/;
+use Pod::Usage;
+
+my @specs = (
+    Param("threads|t")->default(1),
+    Param("dmndDB|d"),
+    Param("FASTQ|q"),
+    Param("scratch"),
+    Param("scratchLoc|l")->require("scratch"),
+    Param("scractchOutputFile|o"),
+    Param("nasOutputDir|n"),
+    Param("chunkSize|c")
+);
+
+
+system "mkdir $opt->get_nasOutputDir";
+system "diamond blastx -v -p $opt->get_threads -d $opt->getdmndDB -q $opt->get_FASTQ -o $outputFile -t $opt->get_scratch --index-chunks $opt->get_chunkSize";
+#my $filename = (split /\//, $outputFile)[-1];
+#system "mv $outputFile $storageDir/$filename";
+
+=pod
+
+=head1 NAME
+
+    runDiamond
+
+=head1 DESCRIPTION
+
+    Customized perl wrapper for executing Diamond on a cluster. Tailored to my own cluster
+
+=head1 OPTIONS
+
+=over 4
+
+=item --threads -t
+
+    the number of threads to use
+
+=item --dmndDB -d
+
+    the formated Diamond database
+
+=item --FASTQ -q
+
+    reads FASTQ file
+
+=back
+
+=cut
+
+
+__END__
+qsub -N jobs_1_1.filtered -m abe -M wesley@bic.nus.edu.sg -b y -V -cwd -pe smp 22 script/runDiamond.pl <ur arguments>
+eg. runDiamond.pl 22 /scratch/uesu/db/nrfull /export2/ulu_pandan2011/data/batch1_gDNA_illumina/filtered_fastq/s_1_1.filtered.fastq /scratch/uesu/ /scratch/uesu/db/out/s_1_1.filtered.m8 /export2/home/uesu/diamonoutput\n" unless $#ARGV == 5;
+/export2/home/uesu/local/bin/diamond
