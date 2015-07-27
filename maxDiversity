@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use local::lib "$bin/local/";
 use Modern::Perl '2015';
 use experimental qw/signatures/;
 use autodie;
@@ -9,7 +10,7 @@ use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("megan|m")->default($ENV{'HOME'}."/local/bin/megan"),
-    Param("format|f")->default(0),
+    Switch("format|f")->default(0),
     Param("outputDIR|o")->default(""),
     Param("contigs|c"),
     Param("refseqKO|r")->default("/export2/home/uesu/db/konr/"),
@@ -23,14 +24,14 @@ my $opt = Getopt::Lucid->getopt( \@specs )->validate;
 pod2usage(-verbose=>2) if $opt->get_help;
 $opt->validate({'requires' => ['format', 'refseqKO', 'outputDIR', 'contigs']});
 
-my $outputDir = $opt->get_outputDIR;
-system "mkdir $outputDir";
-
-my $refseqProtDB = $opt->get_refseqKO;
+my $outputDir     = $opt->get_outputDIR;
+my $refseqProtDB  = $opt->get_refseqKO;
 my $MAX_PROCESSES = $opt->get_threads;
-my $toFormat = $opt->get_format;
-my $contigDir = $opt->get_contigs;
+my $toFormat      = $opt->get_format;
+my $contigDir     = $opt->get_contigs;
+my $meganPath     = $opt->get_megan;
 
+system "mkdir $outputDir";
 
 say "## Using $MAX_PROCESSES threads";
 
@@ -38,18 +39,18 @@ say	"## Blasting"; ##################################################
 system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
 
 say "MEGAN aln"; ##################################################
-#say "script/pAss.01.blast.pl --queryFasta ".$opt->get_format." --megan ".$opt->get_megan;
+system "script/pAss.01.blast.pl --queryFasta $toFormat --megan $meganPath";
 
 #say "## Generating MSA"; ##################################################
-#my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
-#foreach my $ko (`ls $outputDir/out/pAss01/ | grep -v log`) #need to change this; this is hard coded
-#{   chomp $ko;
-#    $pm->start and next;
-#    system "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
-#    $pm->finish;
-#}
-#$pm->wait_all_children;
-#
+my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
+foreach my $ko (`ls $outputDir/out/pAss01/ | grep -v log`) #need to change this; this is hard coded
+{   chomp $ko;
+    $pm->start and next;
+    system "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
+    $pm->finish;
+}
+$pm->wait_all_children;
+
 #say "## MSA statistics"; ##################################################
 #my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);
 #foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
