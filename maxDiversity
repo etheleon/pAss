@@ -56,7 +56,7 @@ my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/pAss01/ | grep -v log`) #need to change this; this is hard coded
 {   chomp $ko;
     $pm->start and next;
-    say "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
+    say "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/pAss01/$ko --out $outputDir/pAss03 --ko $ko";
     $pm->finish;
 }
 $pm->wait_all_children;
