@@ -7,7 +7,6 @@ use autodie;
 use Pod::Usage;
 use experimental qw/signatures/;
 use Getopt::Lucid qw( :all );
-use Parallel::ForkManager;
 
 my @specs = (
     Param("queryFasta|q"),
@@ -27,13 +26,14 @@ my $out           = $opt->get_output;
 $out =~ s/\/$//g;
 my $megan         = $opt->get_megan;
 
-die "query fasta file does not exist"    unless -f $query;
-die "blast file does not exists"         unless -f $blast;
-die "Megan executable does not exists\n" unless -f $megan;
+die "$query does not exist"    unless -f $query;
+die "$blast does not exists"   unless -f $blast;
+die "$megan does not exists\n" unless -f $megan;
 
 my $temp = rand().time();
 &prep();
 &runMegan();
+
 system "rm $temp";
 
 sub runMegan ($count = 1)
@@ -68,10 +68,11 @@ sub runMegan ($count = 1)
 
 sub prep {
     my $CMD = join '', <DATA>;
-    $CMD =~ s/blastx.txt/$blast/;   #text file
-    $CMD =~ s/blastx.rma/$temp.rma/;
-    $CMD =~ s/query.fna/$query/;
-    $CMD =~ s/example/$out/;
+    #problem with script
+    $CMD =~ s/\|\|blastx\.txt\|\|/$blast/;   #text file
+    $CMD =~ s/\|\|blastx\.rma\|\|/$temp.rma/;
+    $CMD =~ s/\|\|query\.fna\|\|/$query/;
+    $CMD =~ s/\|\|example\|\|/$out/;
 
     open my $cmdIO, ">", $temp;
     print $cmdIO $CMD;
@@ -110,8 +111,8 @@ sub prep {
 =cut
 
 __END__
-import blastFile='blastx.txt' fastaFile='query.fna' meganFile='blastx.rma' maxMatches=25 minScore=50.0 maxExpected=1.0 topPercent=100.0 minSupport=1 minComplexity=0.30 useSeed=false useCOG=false useKegg=false paired=false useIdentityFilter=false textStoragePolicy=1 blastFormat=BlastX mapping='Taxonomy:BUILT_IN=true';
+import blastFile='||blastx.txt||' fastaFile='||query.fna||' meganFile='||blastx.rma||' maxMatches=25 minScore=50.0 maxExpected=1.0 topPercent=100.0 minSupport=1 minComplexity=0.30 useSeed=false useCOG=false useKegg=false paired=false useIdentityFilter=false textStoragePolicy=1 blastFormat=BlastX mapping='Taxonomy:BUILT_IN=true';
 unCollapse nodes=all;
 select nodes=all;
-export what=alignment file='example/alignment-%c-%r-%n.fasta' data=Taxonomy classId=selected asConsensus=false useEachReadOnlyOnce=false useEachReferenceOnlyOnce=false refSeqOnly=false translateCDNA=false saveDiversityExtrapolation=false;
+export what=alignment file='||example||/alignment-%c-%r-%n.fasta' data=Taxonomy classId=selected asConsensus=false useEachReadOnlyOnce=false useEachReferenceOnlyOnce=false refSeqOnly=false translateCDNA=false saveDiversityExtrapolation=false;
 quit;

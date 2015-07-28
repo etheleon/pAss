@@ -1,4 +1,7 @@
 #!/usr/bin/env perl
+
+use FindBin qw/$Bin/;
+use local::lib "$Bin/local/";
 use lib '/export2/home/uesu/github/pAss/lib'                                   ;
 use Modern::Perl '2015'                                                        ;
 use Pod::Usage;
