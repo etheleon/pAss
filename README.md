@@ -4,7 +4,7 @@ pAss - protein-guided Assembler
 Method for counting genes from a metagenomic survey
 
 ## Dependencies
-
+* Blast (when installing with brew on OSX use brew install blast --without-static)
 * [MEGAN](http://ab.inf.uni-tuebingen.de/software/megan/)
 * [Muscle](https://github.com/Homebrew/homebrew-science). Use `brew` for installation.
 * Perl
@@ -17,6 +17,7 @@ Method for counting genes from a metagenomic survey
         * run `carton` in the root directory to install perl package dependencies into the `./local` directory
 
 * R for plots
+* Blast++
 
 ## Usage
 

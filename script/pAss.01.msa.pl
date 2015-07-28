@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use local::lib "$BIN/../local";
 use Modern::Perl '2015';
 use autodie;
 use Pod::Usage;

@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use local::lib "$bin/local/";
 use Modern::Perl '2015';
 use experimental qw/signatures/;
 use autodie;
@@ -8,7 +9,9 @@ use Pod::Usage;
 use Getopt::Lucid qw/:all/;
 
 my @specs = (
-    Param("outputDIR|o")->default(),
+    Param("megan|m")->default($ENV{'HOME'}."/local/bin/megan"),
+    Switch("format|f")->default(0),
+    Param("outputDIR|o")->default(""),
     Param("contigs|c"),
     Param("refseqKO|r")->default("/export2/home/uesu/db/konr/"),
     Param("threads|t")->default(1),
@@ -19,21 +22,26 @@ my @specs = (
 
 my $opt = Getopt::Lucid->getopt( \@specs )->validate;
 pod2usage(-verbose=>2) if $opt->get_help;
-#$opt->validate({'requires' => ['', 'blastFile', 'output', 'megan']});
+$opt->validate({'requires' => ['format', 'refseqKO', 'outputDIR', 'contigs']});
 
-my $outputDir = $opt->get_outputDIR;
-my $refseqProtDB = $opt->get_refseqKO;
+my $outputDir     = $opt->get_outputDIR;
+my $refseqProtDB  = $opt->get_refseqKO;
 my $MAX_PROCESSES = $opt->get_threads;
+my $toFormat      = $opt->get_format;
+my $contigDir     = $opt->get_contigs;
+my $meganPath     = $opt->get_megan;
+
+system "mkdir $outputDir";
 
 say "## Using $MAX_PROCESSES threads";
 
-say "## Blasting"; ##################################################
-system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --format 0 --kodb $refseqProtDB";
+say	"## Blasting"; ##################################################
+system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
 
 say "MEGAN aln"; ##################################################
-system "script/pAss.01.blast.pl";
+system "script/pAss.01.blast.pl --queryFasta $toFormat --megan $meganPath";
 
-say "## Generating MSA"; ##################################################
+#say "## Generating MSA"; ##################################################
 my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/out/pAss01/ | grep -v log`) #need to change this; this is hard coded
 {   chomp $ko;
@@ -43,39 +51,39 @@ foreach my $ko (`ls $outputDir/out/pAss01/ | grep -v log`) #need to change this;
 }
 $pm->wait_all_children;
 
-say "## MSA statistics"; ##################################################
-my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
-{
-    chomp $ko;
-    $pm2->start and next;
-    system "script/pAss.04.msa2group.pl --msa $outputDir/out/pAss03/$ko.msa --outputPrefix $outputDir/out/pAss04/$ko";
-    $pm2->finish;
-}
-$pm2->wait_all_children;
-
-say "## MSA Diagnostics"; #################################################
-my $pm3 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
-{
-    chomp $ko;
-    $pm3->start and next;
-    system "script/pAss.04.msa2group.pl --msa $outputDir/out/pAss03/$ko.msa --outputPrefix $outputDir/out/pAss04/$ko";
-    system "script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/out/pAss03/$ko.msa --outputDir $outputDir/out/pAss10/$ko";
-    $pm3->finish;
-}
-$pm3->wait_all_children;
-
-say "## Output MaxDiveristy Region";
-my $pm4 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/out/pAss10/`)
-{
-    chomp $ko;
-    $pm4->start and next;
-    say "script/pAss.11.best.window.r $outputDir/out/pAss10/$ko/$ko $outputDir/out/pAss03/$ko.msa $outputDir/out/pAss11/";
-    $pm4->finish;
-}
-$pm4->wait_all_children;
+#say "## MSA statistics"; ##################################################
+#my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
+#{
+#    chomp $ko;
+#    $pm2->start and next;
+#    system "script/pAss.04.msa2group.pl --msa $outputDir/out/pAss03/$ko.msa --outputPrefix $outputDir/out/pAss04/$ko";
+#    $pm2->finish;
+#}
+#$pm2->wait_all_children;
+#
+#say "## MSA Diagnostics"; #################################################
+#my $pm3 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/out/pAss03/ | grep -v temp | sed s/\.msa//g`)
+#{
+#    chomp $ko;
+#    $pm3->start and next;
+#    system "script/pAss.04.msa2group.pl --msa $outputDir/out/pAss03/$ko.msa --outputPrefix $outputDir/out/pAss04/$ko";
+#    system "script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/out/pAss03/$ko.msa --outputDir $outputDir/out/pAss10/$ko";
+#    $pm3->finish;
+#}
+#$pm3->wait_all_children;
+#
+#say "## Output MaxDiveristy Region";
+#my $pm4 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/out/pAss10/`)
+#{
+#    chomp $ko;
+#    $pm4->start and next;
+#    say "script/pAss.11.best.window.r $outputDir/out/pAss10/$ko/$ko $outputDir/out/pAss03/$ko.msa $outputDir/out/pAss11/";
+#    $pm4->finish;
+#}
+#$pm4->wait_all_children;
 
 #Documentation
 =pod

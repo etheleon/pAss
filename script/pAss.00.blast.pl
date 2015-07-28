@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use FindBin qw/$Bin/;
+use local::lib "$bin/../local";
 use Modern::Perl '2015';
 use experimental qw/signatures/;
 use Parallel::ForkManager;
@@ -9,10 +11,8 @@ use Getopt::Lucid qw(:all);
 
 my @specs = (
     Param("kodb|d")->default("/export2/home/uesu/db/konr"),
-#    Param("threads|t")->default(1),
-#    Param("batch|b")->default("pAss00_BATCH"),
-    Param("contigs|c")->default("/export2/home/uesu/reDiamond/out/assm.0200.newbler"),
-    Param("output|o")->default("/export2/home/uesu/reDiamond/out/assm.0300"),
+    Param("contigs|c"),
+    Param("output|o"),
     Switch("format|f")->default(0),
     Switch ("help|h"),
     Param("threads|t")->default(1)
@@ -20,27 +20,34 @@ my @specs = (
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
+$opt->validate({'requires' => ['format', 'contigs', 'kodb', 'output']});
 
 $|++;
 
 my $pm = Parallel::ForkManager->new($opt->get_threads);
 
+my $outputdir = $opt->get_output;
+system "mkdir $outputdir";
 my $kodb         = $opt->get_kodb;
 my %kohash;
+my $toFormat = $opt->get_format;
 
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
 {
     m/ko:K\d{5}/;
     $kohash{$&}++;
-    if($opt->get_format){
-        system "formatdb -i $kodb/$& -o T - $kodb/$&";
+    if($toFormat){
+       `which makeblastdb` ?
+        #Modern blast
+        system "makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&" :
+        #Legacy blast
+        system "formatdb -i $kodb/$& -o T -n $kodb/$&";
         say STDERR $_;
     }
 }
 say STDERR "stored KOs";
 
-#open my $batchOutput, ">", $opt->get_batch;
 for my $indivKO (keys %kohash)
 {
 
@@ -59,7 +66,11 @@ sub runBLAST($ko, $contigPath, $output)
     {
         return;
     }
-    system "blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx"
+    `which blastall` ?
+    #Legacy blast
+    system "blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx":
+    #Modern Blast
+    system "legacy_blast.pl blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx";
 }
 
 =pod
