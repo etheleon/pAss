@@ -13,13 +13,15 @@ my @specs = (
     Param("blastFile|b"),
     Param("output|o"),
     Param("megan|m")->default("/export2/home/uesu/local/megan/MEGAN"),
+    Param("meganLicense|l")->default("/export2/home/uesu/downloads/MEGAN5-academic-license.txt"),
     Switch ("help|h")
 );
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
-$opt->validate({'requires' => ['queryFasta', 'blastFile', 'output', 'megan']});
+$opt->validate({'requires' => ['queryFasta', 'blastFile', 'output']});
 
+my $license       = $opt->get_meganLicense;
 my $query         = $opt->get_queryFasta;
 my $blast         = $opt->get_blastFile;
 my $out           = $opt->get_output;
@@ -53,7 +55,7 @@ sub runMegan ($count = 1)
     #try new screen number if its taken;
     $scr = int(30000 * rand()) while -e "/tmp/.X$scr-lock";
 
-    my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
+    my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E -L $license -c $temp`;
     if($signal =~ m/Writing \d+ reads to file/sm)
     {
         unlink "$out.lock", $temp, "$temp.rma";
@@ -106,6 +108,9 @@ sub prep {
 =item --megan -m
 
     path to megan executable
+=item --meganLicense -l
+
+    path to MEGAN's academic license
 
 =back
 =cut

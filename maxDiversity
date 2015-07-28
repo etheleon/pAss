@@ -36,20 +36,20 @@ system "mkdir $outputDir";
 
 say "## Using $MAX_PROCESSES threads";
 
-say	"## Blasting"; ##################################################
-#system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
+say "## Blasting"; ##################################################
+system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
 
 say "MEGAN aln"; ##################################################
-#my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
-#foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
-#{   chomp $ko;
-#    $pm0->start and next;
-#    say "Processing $ko";
-#    system "mkdir -p $outputDir/pAss01/$ko";
-#    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --output $outputDir/pAss01/$ko";
-#    $pm0->finish;
-#}
-#$pm0->wait_all_children;
+my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
+foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
+{   chomp $ko;
+    $pm0->start and next;
+    say "Processing $ko";
+    system "mkdir -p $outputDir/pAss01/$ko";
+    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --output $outputDir/pAss01/$ko";
+    $pm0->finish;
+}
+$pm0->wait_all_children;
 
 #say "## Generating MSA"; ##################################################
 my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
@@ -59,7 +59,7 @@ foreach my $ko (`ls $outputDir/pAss01/ | grep -v log`) #need to change this; thi
     say "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
     $pm->finish;
 }
-#$pm->wait_all_children;
+$pm->wait_all_children;
 
 #say "## MSA statistics"; ##################################################
 #my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);
