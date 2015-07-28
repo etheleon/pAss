@@ -101,7 +101,7 @@ sub windowDepth ($position, $windowSize)
 sub slidingWindow ($startingPosition)
 {
     @starting = ();
-    @starting = @{$tree->fetch($startingPosition, $startingPosition+1)};
+    @starting = $tree->fetch($startingPosition, $startingPosition+1)->@*;
     #Stores headers of sequences in the starting position
     tryCutSize($minLength, $startingPosition);
 }
@@ -112,7 +112,7 @@ sub tryCutSize($cut, $startingPosition)
     if ($endingPosition < $msalength)
     {
         #optimise
-        my @ending   = @{$tree->fetch($endingPosition, $endingPosition+1)};
+        my @ending   = $tree->fetch($endingPosition, $endingPosition+1)->@*;
         my @isect    = intersect @starting, @ending;
         #optimise
         my $ns       = scalar @isect;

@@ -14,24 +14,24 @@ Method for counting genes from a metagenomic survey
 
     * Install dependencies
         * Install Carton using `$ cpanm Carton`.
-        * run `carton` in package’s root directory
+        * run `carton` in the root directory to install perl package dependencies into the `./local` directory
 
 * R for plots
 
-
 ## Usage
-
-In the examples folder, We have 100 KOs:
-
-1. assembled KO contigs (from NEWBLER)
-2. the Reference sequences grouped by their KEGG Ortholog Groups
-
 
 `$` denotes the terminal prompt
 
 ```
 $ maxDiversity --contigs /path/to/assembled/ko/contigs --refseqKO path/to/ko/prot/db --threads 10 --prefix path/to/folder/for/containing/intermediate/files
 ```
+
+### Testing
+
+In the examples folder:
+
+1. contigs assembled using functionally binned reads (using NEWBLER)
+2. the Reference sequences grouped by their KEGG Ortholog Groups
 
 ## Description
 
@@ -49,6 +49,8 @@ The scripts should be run in series from 00 to XX.
 | pAss.12     | Outputs as fasta MAX DIVERSITY region for each contig                                                                                          |
 
 ## pAss.03 PASS::Alignment
+
+This package is itself a perl module
 
 ### Input
 
