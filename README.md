@@ -5,7 +5,7 @@ Method for counting genes from a metagenomic survey
 
 ## Dependencies
 * Blast (when installing with brew on OSX use brew install blast --without-static)
-* [MEGAN](http://ab.inf.uni-tuebingen.de/software/megan/)
+* [MEGAN](http://ab.inf.uni-tuebingen.de/software/megan/) + [xvfb-run](http://manpages.ubuntu.com/manpages/lucid/man1/xvfb-run.1.html)
 * [Muscle](https://github.com/Homebrew/homebrew-science). Use `brew` for installation.
 * Perl
     * v5.2X.X is required:
@@ -18,6 +18,7 @@ Method for counting genes from a metagenomic survey
 
 * R for plots
 * Blast++
+
 
 ## Usage
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
-use local::lib "$bin/local/";
+use FindBin qw/$Bin/;
+use local::lib "$Bin/local/";
 use Modern::Perl '2015';
 use experimental qw/signatures/;
 use autodie;
@@ -39,17 +40,24 @@ say	"## Blasting"; ##################################################
 system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
 
 say "MEGAN aln"; ##################################################
-system "script/pAss.01.blast.pl --queryFasta $toFormat --megan $meganPath";
 
-#say "## Generating MSA"; ##################################################
-my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/out/pAss01/ | grep -v log`) #need to change this; this is hard coded
-{   chomp $ko;
-    $pm->start and next;
-    system "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
-    $pm->finish;
+my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
+foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
+{
+    $pm0->start and next;
+    system "mkdir $outputDir/pAss01/$ko";
+    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454Allcontigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --output $outputDir/pAss01/$ko/";
+    $pm0->start and next;
 }
-$pm->wait_all_children;
+#say "## Generating MSA"; ##################################################
+#my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/pAss01/ | grep -v log`) #need to change this; this is hard coded
+#{   chomp $ko;
+#    $pm->start and next;
+#    system "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/out/pAss01/$ko --out $outputDir/out/pAss03 --ko $ko";
+#    $pm->finish;
+#}
+#$pm->wait_all_children;
 
 #say "## MSA statistics"; ##################################################
 #my $pm2 = Parallel::ForkManager->new($MAX_PROCESSES);

@@ -1,13 +1,15 @@
 #!/usr/bin/env perl
 
-use local::lib "$BIN/../local";
+use FindBin qw/$Bin/;
+use local::lib "$Bin/../local";
 use Modern::Perl '2015';
 use autodie;
 use Pod::Usage;
 use experimental qw/signatures/;
 use Getopt::Lucid qw( :all );
+use Parallel::ForkManager;
 
-my @specs =(
+my @specs = (
     Param("queryFasta|q"),
     Param("blastFile|b"),
     Param("output|o"),
@@ -19,17 +21,17 @@ my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
 $opt->validate({'requires' => ['queryFasta', 'blastFile', 'output', 'megan']});
 
-my $query = $opt->get_queryFasta;
-my $blast = $opt->get_blastFile;
-my $out = $opt->get_output;
-my $megan = $opt->get_megan;
+my $query         = $opt->get_queryFasta;
+my $blast         = $opt->get_blastFile;
+my $out           = $opt->get_output;
+$out =~ s/\/$//g;
+my $megan         = $opt->get_megan;
 
-die unless -f $query;
-die unless -f $blast;
-die unless -f $megan;
+die "query fasta file does not exist"    unless -f $query;
+die "blast file does not exists"         unless -f $blast;
+die "Megan executable does not exists\n" unless -f $megan;
 
 my $temp = rand().time();
-
 &prep();
 &runMegan();
 system "rm $temp";
@@ -52,12 +54,12 @@ sub runMegan ($count = 1)
     $scr = int(30000 * rand()) while -e "/tmp/.X$scr-lock";
 
     my $signal = `xvfb-run -n $scr -f $out.lock -e $out.log $megan -g -d -E  -c $temp`;
-    #cant check for xvfb-run's own error [xc's version]
     if($signal =~ m/Writing \d+ reads to file/sm)
     {
         unlink "$out.lock", $temp, "$temp.rma";
         exit 1;
-    }else{
+    }else
+    {
         say STDERR "reattempt";
         say STDERR $signal;
         runMegan($count);

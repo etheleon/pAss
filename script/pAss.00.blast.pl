@@ -1,13 +1,13 @@
 #!/usr/bin/env perl
 
 use FindBin qw/$Bin/;
-use local::lib "$bin/../local";
+use local::lib "$Bin/../local";
 use Modern::Perl '2015';
 use experimental qw/signatures/;
 use Parallel::ForkManager;
 use Pod::Usage;
 use autodie;
-use Getopt::Lucid qw(:all);
+use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("kodb|d")->default("/export2/home/uesu/db/konr"),
