@@ -11,7 +11,7 @@ use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("megan|m")->default($ENV{'HOME'}."/local/bin/MEGAN"),
-    Param("meganLicense|m")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
+    Param("meganLicense|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
     Switch("format|f")->default(0),
     Param("outputDIR|o")->default(""),
     Param("contigs|c"),
@@ -47,7 +47,7 @@ foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
     $pm0->start and next;
     say "Processing $ko";
     system "mkdir -p $outputDir/pAss01/$ko";
-    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense --output $outputDir/pAss01/$ko";
+    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense $meganLicense --output $outputDir/pAss01/$ko";
     $pm0->finish;
 }
 $pm0->wait_all_children;
