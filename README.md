@@ -16,7 +16,12 @@ Method for counting genes from a metagenomic survey
         * Install Carton using `$ cpanm Carton`.
         * run `carton` in the root directory to install perl package dependencies into the `./local` directory
 
-* R for plots
+* R
+  * ggplot2
+  * dplyr
+  * magrittr
+  * Biostrings (from Bioconductor)
+  * MetamapsDB from github 
 * Blast++
 
 
