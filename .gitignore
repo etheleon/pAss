@@ -1,4 +1,3 @@
-fatlib
 local
 *.pog
 *.pnd
@@ -8,3 +7,5 @@ local
 *.phr
 *.psd
 *.psq
+*.snapshot
+error.log
