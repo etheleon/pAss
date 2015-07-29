@@ -10,7 +10,7 @@ use Set::IntervalTree;
 use Pod::Usage;
 use Getopt::Lucid qw/:all/;
 
-die "usage: $0 min_leng[integer] msa.file outputDir\n" unless $#ARGV == 2;
+#die "usage: $0 min_leng[integer] msa.file outputDir\n" unless $#ARGV == 2;
 ##################################################
 #+------------------------------------------------
 #Init
@@ -27,7 +27,7 @@ my $opt = Getopt::Lucid->getopt( \@specs )->validate;
 pod2usage(-verbose=>2) if $opt->get_help;
 
 #my ($minLength, $inputFile, $outputDir) = @ARGV;    #cutRegionSize, input.msa
-my ($minLength, $inputFile, $outputDir) = ($opt->get_minLength, $opt->get_inputFile, $opt->get_outputDir)
+my ($minLength, $inputFile, $outputDir) = ($opt->get_minLength, $opt->get_inputFile, $opt->get_outputDir);
 
 my $msalength;  #length of msa
 my %seq;        #hash ref storing sequence information
