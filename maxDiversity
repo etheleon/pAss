@@ -11,7 +11,7 @@ use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("megan|m")->default($ENV{'HOME'}."/local/bin/MEGAN"),
-    Param("meganLicense|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
+    Param("lic|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
     Switch("format|f")->default(0),
     Param("outputDIR|o")->default(""),
     Param("contigs|c"),
@@ -33,12 +33,12 @@ my $toFormat      = $opt->get_format;
 my $contigDir     = $opt->get_contigs;
 my $meganPath     = $opt->get_megan;
 my $meganLicense  = $opt->get_meganLicense;
-system "mkdir $outputDir";
+`mkdir $outputDir`;
 
 say "## Using $MAX_PROCESSES threads";
 
 say "## Blasting"; ##################################################
-system "script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir";
+`script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir`;
 
 say "MEGAN aln"; ##################################################
 my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
@@ -46,8 +46,8 @@ foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
 {   chomp $ko;
     $pm0->start and next;
     say "Processing $ko";
-    system "mkdir -p $outputDir/pAss01/$ko";
-    system "script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense $meganLicense --output $outputDir/pAss01/$ko";
+    `mkdir -p $outputDir/pAss01/$ko`;
+    `script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense $meganLicense --output $outputDir/pAss01/$ko`;
     $pm0->finish;
 }
 $pm0->wait_all_children;
@@ -57,35 +57,35 @@ my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/pAss01/ | grep -v log`) #need to change this; this is hard coded
 {   chomp $ko;
     $pm->start and next;
-    system "script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/pAss01/$ko --out $outputDir/pAss03 --ko $ko";
+    `script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/pAss01/$ko --out $outputDir/pAss03 --ko $ko`;
     $pm->finish;
 }
 $pm->wait_all_children;
 
 
 say "## MSA Diagnostics"; #################################################
-system "mkdir $outputDir/pAss04";
-system "mkdir $outputDir/pAss10";
+`mkdir $outputDir/pAss04`;
+`mkdir $outputDir/pAss10`;
 
 my $pm3 = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/pAss03/ | grep -v temp | sed s/\.msa//g`)
 {
     chomp $ko;
     $pm3->start and next;
-    system "script/pAss.04.msa2group.pl --msa $outputDir/pAss03/$ko.msa --outputPrefix $outputDir/pAss04/$ko";
-    system "script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/pAss03/$ko.msa --outputDir $outputDir/pAss10/$ko";
+    `script/pAss.04.msa2group.pl --msa $outputDir/pAss03/$ko.msa --outputPrefix $outputDir/pAss04/$ko`;
+    `script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/pAss03/$ko.msa --outputDir $outputDir/pAss10/$ko`;
     $pm3->finish;
 }
 $pm3->wait_all_children;
 
 say "## Output MaxDiveristy Region";
-system "mkdir $outputDir/pAss11";
+    `mkdir $outputDir/pAss11`;
 my $pm4 = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/pAss10/`)
 {
     chomp $ko;
     $pm4->start and next;
-    system "script/pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/";
+    `script/pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/`;
     $pm4->finish;
 }
 $pm4->wait_all_children;
@@ -109,7 +109,7 @@ $pm4->wait_all_children;
 
 =item Contigs
 
-    Contigs should be in found in a root directory separated by KO ids (NEWBLER)
+    Contigs should be in found in a root directory separated by KO ids (uses NEWBLER)
 
     root/directory
     |-- K00001
@@ -131,17 +131,17 @@ $pm4->wait_all_children;
 
 =over 4
 
-=item --megan -m
+=item --megan, -m
 
     File path pointing to MEGAN executable. Defaults to $HOME/loca/bin/MEGAN
 
-=item --meganLicense
+=item --lic , -l
 
     File Path poining to the MEGAN5 academic license
 
 =item --contigs, -c
 
-    the path to dir containing contigs fna files
+    the path to dir containing contigs fna files eg. $HOME/out/assm.0200.newbler
 
         data/contigs/
         |-- K00001
@@ -181,7 +181,11 @@ $pm4->wait_all_children;
 
 =item --prefix, -p
 
-    the location for all the intermediate files
+    the location for all the intermediate files (not used)
+
+=item --outputDIR, -o
+
+    the location for all the intermediate files (not used)
 
 =item --windowSize -w
 
