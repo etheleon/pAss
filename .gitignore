@@ -7,3 +7,5 @@ local
 *.phr
 *.psd
 *.psq
+*.snapshot
+error.log

@@ -1,22 +1,30 @@
 pAss - protein-guided Assembler
 ====
 
-Method for counting genes from a metagenomic survey
+[![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss)
+
+pAss allows for the enumeration of assembled genes/transcripts within a functional bin.
+
 
 ## Dependencies
-* Blast (when installing with brew on OSX use brew install blast --without-static)
-* [MEGAN](http://ab.inf.uni-tuebingen.de/software/megan/) + [xvfb-run](http://manpages.ubuntu.com/manpages/lucid/man1/xvfb-run.1.html)
+* Blast (supports legancy blastall and formatdb)
+* [MEGAN5](http://ab.inf.uni-tuebingen.de/software/megan/) + [xvfb-run](http://manpages.ubuntu.com/manpages/lucid/man1/xvfb-run.1.html)
 * [Muscle](https://github.com/Homebrew/homebrew-science). Use `brew` for installation.
 * Perl
     * v5.2X.X is required:
        * Use [tokuhirom/plenv](https://github.com/tokuhirom/plenv) to install a local version of the latest perl (>=5.21.0)
        * Install **CPANMINUS**, using `plenv install-cpanm`
 
-    * Install dependencies
+    * Install perl dependencies
         * Install Carton using `$ cpanm Carton`.
         * run `carton` in the root directory to install perl package dependencies into the `./local` directory
 
-* R for plots
+* R
+  * ggplot2
+  * dplyr
+  * magrittr
+  * Biostrings (from Bioconductor)
+  * MetamapsDB from github 
 * Blast++
 
 
@@ -25,19 +33,16 @@ Method for counting genes from a metagenomic survey
 `$` denotes the terminal prompt
 
 ```
-$ maxDiversity --contigs /path/to/assembled/ko/contigs --refseqKO path/to/ko/prot/db --threads 10 --prefix path/to/folder/for/containing/intermediate/files
+$ ./maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ -t 20
 ```
 
-### Testing
+### Required Input
 
-In the examples folder:
+1. Contigs are assembled from functionally binned reads (eg. NEWBLER 2.6 (20110517_1502))
+2. Reference sequences grouped by their gene families
+## Description of pipeline
 
-1. contigs assembled using functionally binned reads (using NEWBLER)
-2. the Reference sequences grouped by their KEGG Ortholog Groups
-
-## Description
-
-The pAss pipeline requires one to provide contigs grouped by the KEGG’s Ortholog groups built using NEWBLER (`runAssembly` >= 2.6 (20110517_1502)).
+The pAss pipeline requires one to provide contigs grouped by the their Ortholog groups.
 The scripts should be run in series from 00 to XX.
 
 | Script Name | Description                                                                                                                                    |
@@ -50,15 +55,14 @@ The scripts should be run in series from 00 to XX.
 | pAss.11     | Outputs MAX diversity sequence                                                                                                                                     |
 | pAss.12     | Outputs as fasta MAX DIVERSITY region for each contig                                                                                          |
 
-## pAss.03 PASS::Alignment
+### pAss.03 PASS::Alignment
+This repo is itself a perl module
 
-This package is itself a perl module
+#### Input
 
-### Input
+Takes a MSA of contigs to protein reference sequences.
 
-MSA of contigs to protein reference sequences.
-
-Example 
+Example
 ```
 >ref|YP_001105148.1| zinc-containing dehydrogenase [Saccharopolyspora erythraea NRRL
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------W--G--G--L--F--S--D--L--V--R--V--P--W--A--E--A--M--L--V--P--L--P--T--G--P--D--P--V--A--M--A--S--A--S--D--N--------------------------------------------------G--A--R--V--L--V--V--A--R--G--S--I--G--L--Y--V--C--D--I--A--R--A--L--G--A--G--D--V--L--Y--V--D--P--D--P--A--H--R--A--L--A--E--Q--Y--G--A--R--T--A--E--E--I--E--P--
@@ -68,16 +72,14 @@ Example
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------tggggcggagCTCTCTCGGAGCGCGTGAAAGTTCCGTGGGCCGAAGCGATGCTCCGGCCGATTCCCGCAGGCTTAGATGCCCTGCATTTGTCGAGCCTGAGTGACAAC------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------]
 ```
 
-### Procedure
+#### Procedure
 
-1. MUSCLE to generate protein based MSA of reference sequences
+1. MUSCLE to generate protein based MSA of reference prot sequences.
+2. First Aligns NT contigs to best matched prot REFSEQ then to global REFSEQ protein MSA from above.
+3. The MAX diversity region is not calculated for a KO if:
 
-2. Aligns and sets coordinates of contig<->REFSEQ(Protein) to the protein MSA from above.
-
-The MAX diversity region is not calculated for a KO if:
-
-1. GAPS (ie. more gaps than are bases)
+* GAPS (ie. more gaps than are bases)
   * When the the gap ratio (NT:GAP) exceeds 1:10
 
-2. KOs where there are too few contigs are not considered 
+* KOs where there are too few contigs are not considered 
   * this or may not be IDEAL cause we’re looking for cases where there’s a large amt of RNA reads mapped to a low number o contigs

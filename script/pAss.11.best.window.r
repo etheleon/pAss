@@ -8,13 +8,22 @@
 #' **NOTE**: This is a generic summary, the same Rscript was applied all KOs. we chose K00001, alcohol dehydrogenase
 
 #+ libraryload, message=FALSE, echo=FALSE
+
+
+#' Install if missing
+if (!require("devtools"))   install.packages("devtools", repos="http://cran.bic.nus.edu.sg/")
+if (!require("Biostrings")){source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")}
+if (!require("magrittr"))   devtools::install_github("smbache/magrittr")
+if (!require("magrittr"))   devtools::install_github("etheleon/MetamapsDB")
+if (!require("ggplot2"))    install.packages("ggplot2", repos="http://cran.bic.nus.edu.sg/")
+if (!require("dplyr"))      install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")
+
+library(Biostrings)
+library(magrittr)
+library(MetamapsDB)
 library(ggplot2)
 theme_set(theme_bw())
 library(dplyr)
-library(magrittr)
-library(Biostrings)
-library(MetamapsDB)
-
 
 #' ## Data processing
 #+ Reading-in-KO-path, echo=FALSE

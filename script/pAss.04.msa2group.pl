@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use FindBin qw/$Bin/;
+use local::lib "$Bin/../local";
 use Modern::Perl '2015';
 use autodie;
 use Statistics::R;
