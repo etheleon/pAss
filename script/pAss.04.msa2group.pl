@@ -20,6 +20,7 @@ my @specs = (
     Switch("help|h")->default(0)
 );
 my $opt = Getopt::Lucid->getopt( \@specs );
+$opt->validate({'requires' => ['msa']});
 pod2usage(-verbose=>2) if $opt->get_help;
 
 my $in     = $opt->get_msa;
