@@ -11,7 +11,7 @@ use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("megan|m")->default($ENV{'HOME'}."/local/bin/MEGAN"),
-    Param("lic|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
+    Param("meganLicense|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
     Switch("format|f")->default(0),
     Param("outputDIR|o")->default(""),
     Param("contigs|c"),
