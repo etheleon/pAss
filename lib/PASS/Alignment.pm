@@ -28,7 +28,7 @@ sub assignContig2ref($self){
 
     for my $alignmentFile ($self->alignmentFiles->@*)
     {
-        my $msaFile = (split /\//, $alignmentFile)[-1];
+#        my $msaFile = (split /\//, $alignmentFile)[-1];
         my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta');
 
 #       PROTEIN SEQUENCE
@@ -215,18 +215,20 @@ has pos => (
     handles => {},
 );
 
-#Curated
+#File path pointing to file storing protein sequences of tall reference sequences
 has refseqFasta => (
     is => 'ro',
     required => 1,
 );
 
+#MSA alignment files created by MEGAN5 to of contigs against reference sequences
 has alignmentFiles =>(
 is=>'ro',
 handle => [],
 #required=>1,
 );
 
+#the output directory and prefix
 has outputPrefix =>(
 is=>'ro',
 required=>1,
