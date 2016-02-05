@@ -66,9 +66,9 @@ sub runBLAST($ko, $contigPath, $output)
     {
         return;
     }
-    `which blastall` ?
+    `which blastx` ?
     #Legacy blast
-    system "blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx":
+    system "blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx":
     #Modern Blast
     system "legacy_blast.pl blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx";
     say "$ko blasted";
