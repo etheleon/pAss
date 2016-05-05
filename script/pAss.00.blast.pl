@@ -23,8 +23,8 @@ pod2usage(-verbose=>2) if $opt->get_help;
 $opt->validate({'requires' => ['format', 'contigs', 'kodb', 'output']});
 
 $|++;
-
-my $pm = Parallel::ForkManager->new($opt->get_threads);
+my $threads = $opt->get_threads;
+my $pm = Parallel::ForkManager->new($threads);
 
 my $outputdir = $opt->get_output;
 system "mkdir $outputdir";
@@ -40,13 +40,13 @@ for (<"$kodb/*">)
     if($toFormat){
        `which makeblastdb` ?
         #Modern blast
-        system "makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&" :
+        `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&` :
         #Legacy blast
-        system "formatdb -i $kodb/$& -o T -n $kodb/$&";
+        `formatdb -i $kodb/$& -o T -n $kodb/$&`;
         say STDERR $_;
     }
 }
-say STDERR "stored KOs";
+say STDERR "    #stored KOs";
 
 for my $indivKO (keys %kohash)
 {
@@ -66,11 +66,17 @@ sub runBLAST($ko, $contigPath, $output)
     {
         return;
     }
-    `which blastx` ?
-    #Legacy blast
-    system "blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx":
-    #Modern Blast
-    system "legacy_blast.pl blastall -p blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx";
+    `blastx \\
+        -db $kodb/$& \\
+        -query $contigPath/$1/454AllContigs.fna \\
+        -out $output/$1.blastx \\
+        -evalue 1e-5 \\
+        -seg no \\
+        -num_descriptions 10 \\
+        -num_alignments 10 \\
+        -num_threads $threads`;
+    #translated from Legacy blast command written by XC
+    #blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx
     say "$ko blasted";
 }
 

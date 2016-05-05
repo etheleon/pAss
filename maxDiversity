@@ -22,9 +22,13 @@ my @specs = (
     Param("windowSize|w")->default(200)
 );
 
-my $opt = Getopt::Lucid->getopt( \@specs )->validate;
+my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
-$opt->validate({'requires' => ['format','refseqKO','outputDIR','contigs']});
+
+my $path_to_blastn = qx(which makeblastdb);
+unless ($path_to_blastn) { die "\nERROR: makeblastdb not found"; }
+
+$opt->validate({'requires' => ['format','refseqKO','outputDIR','contigs']}); #dun chain, else help wont print
 
 my $outputDir     = $opt->get_outputDIR;
 my $refseqProtDB  = $opt->get_refseqKO;
@@ -33,12 +37,14 @@ my $toFormat      = $opt->get_format;
 my $contigDir     = $opt->get_contigs;
 my $meganPath     = $opt->get_megan;
 my $meganLicense  = $opt->get_meganLicense;
+
+
 `mkdir $outputDir`;
 
 say "## Using $MAX_PROCESSES threads";
 
 say "## Blasting"; ##################################################
-`script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir`;
+`$Bin/script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir`;
 
 say "MEGAN aln"; ##################################################
 my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
@@ -99,31 +105,28 @@ $pm4->wait_all_children;
 
 =head1 DESCRIPTION
 
-    Before running maxDiversity the following is required
+    ProteinMSA-guided Gene-Centric analyses of highly complex communities using Metagenomics
+
+=head2 Prerequisites
+
+    Before running maxDiversity the following is required:
 
 =over 4
 
-=item Protein Reference Sequences
+=item Ortholog's Protein Reference Sequences
 
     Prokaryotic sequences only,  grouped by KOs (eg. K00001.fa, K00002.fa)
+    See DESCRIPTION for folder structure with flag
 
-=item Contigs
 
-    Contigs should be in found in a root directory separated by KO ids (uses NEWBLER)
+=item PreAssembled Contigs
 
-    root/directory
-    |-- K00001
-    |   |-- 454AllContigs.fna
-    |   |-- 454AllContigs.qual
-    |   |-- 454ContigGraph.txt
-    |   |-- ...
-    |   `-- sff
-    |-- K00002
-    |   |-- 454AllContigs.fna
-    |   |-- 454AllContigs.qual
-    |   |-- 454ContigGraph.txt
-    |   |-- ...
-    |   `-- sff
+    Currenly on the assembler NEWBLER is supported
+    See folder structure:
+
+=item Blast
+
+    brew install homebrew/science/blast
 
 =back
 
@@ -133,7 +136,8 @@ $pm4->wait_all_children;
 
 =item --megan, -m
 
-    File path pointing to MEGAN executable. Defaults to $HOME/loca/bin/MEGAN
+    File path pointing to MEGAN executable. Defaults to $HOME/local/bin/MEGAN
+    Requires MEGAN version 5
 
 =item --lic , -l
 
@@ -171,9 +175,27 @@ $pm4->wait_all_children;
 
 =item --refseqKO, -r
 
-    the prefix to which to append the KO id eg. /export2/home/uesu/db/konr/ko:
 
-    note the reference sequence files should be named in the same convention as seen in the example
+    example/refSeqProtDB/
+        ├── ko:K00001
+        ├── ko:K00002
+        ├── ko:K00003
+        ├── ko:K00004
+        ├── ko:K00005
+        ├── ko:K00007
+        ├── ko:K00008
+        ├── ko:K00009
+        ├── ko:K00010
+        └── ko:K00011
+
+    Filenames ko:KXXXXX
+
+        >gi|510880287|ref|YP_008052955.1| alcohol dehydrogenase [Salinarchaeum sp. Harcht-Bsk1]
+        MRAAVLEAHGEPLSVQEVDYPEPGPEQVVVETEACGICRSDWHAWRGDWEWMGISPSPGQILGHEPAGVVSEVGDEIESL
+        SEGDRVTVPFHLGDGTCPYCRNGHSNVCETSVPLGFIGAAQGAYAEAFPVRKADFNVTKLPDSVDFTEMAALGCRFMTAY
+        HGLTDRAGLRPGDTVAIHGCGGVGLSAVHIADALGAVPIAVDVQESKLDRARELGAAATINGAEVDDVPGEVFRANDGNG
+        ADVSVDALGIEETCGNAVRSLGKTGTHVQIGLSEGDTGGQLSVPVDQMTLQEIDFHGSYGMPLVRYDELFTLIERCTLQP
+        EKIVGETLSLEDAPETLASMDDYETIGIPVITEF
 
 =item --threads, -t
 
