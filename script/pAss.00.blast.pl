@@ -38,11 +38,9 @@ for (<"$kodb/*">)
     m/ko:K\d{5}/;
     $kohash{$&}++;
     if($toFormat){
-       `which makeblastdb` ?
-        #Modern blast
-        `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&` :
+        `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
         #Legacy blast
-        `formatdb -i $kodb/$& -o T -n $kodb/$&`;
+        #`formatdb -i $kodb/$& -o T -n $kodb/$&`;
         say STDERR $_;
     }
 }
