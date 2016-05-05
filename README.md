@@ -14,11 +14,7 @@ pAss allows for the enumeration of assembled genes/transcripts within a function
     * v5.2X.X is required:
        * Use [tokuhirom/plenv](https://github.com/tokuhirom/plenv) to install a local version of the latest perl (>=5.21.0)
        * Install **CPANMINUS**, using `plenv install-cpanm`
-
-    * Install perl dependencies
-        * Install Carton using `$ cpanm Carton`.
-        * run `carton` in the root directory to install perl package dependencies into the `./local` directory
-
+       * run `./INSTALL`
 * R
   * ggplot2
   * dplyr
