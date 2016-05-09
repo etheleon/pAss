@@ -1,0 +1,18 @@
+>ref|YP_001814010.1| alcohol dehydrogenase [Exiguobacterium sibiricum 255-15]
+---------------------------------------------------E--Q--P--R--P--D--V--R--P--H--D--V--L--V--E--I--H--A--A--S--I--N--P--V--D--F--K--I--R--D--G--D--V--K--L--L--I--P--Y--Q--F--P--L--I--L--G--N--D--F--A--G--I--I--V--E--V--
+>contig00839  length=169   numreads=9
+---------------------------------------------------------------------------CCCGGgGACCTGCTGGTGAAGGTgCGGGCGGCCAGCGTgAATCcggTCGATTTCAAGATCCGCCAGGGCAAGACCCGGGCGCTGCTgCCTTACCGCTTTCCCCTCGTCCTCGGCAACGACCTGGCCGGCGaagtcgtggccgtc
+>contig00889  length=167   numreads=136 (rev)
+---------------------------------------------------GACAGGCCCGTTCCAGAgGTCCGACCCAGCGACGTTCTCGTCGAGATTCATGCTGCTTCGGTCAATCCGATTGACTACAAACTTCATCAAGGATCGATGAAAGCGATCCGCaAGTTTGAAtTTCCCCTGACGCTGgGt------------------------------
+>contig01148  length=145   numreads=26 (rev)
+---------------------------------------------------------------CCGCAGGCGGGGCCGGGCGAGCTGCTGGTGGagGTGCATGCCGCCAGCGTGAACCCGGTCGACTTCAAGATCCGCGACGGCATGCTGAAGcTGATCgTTcCCTTCGGCtTCCCGCTCATCCTCGGCAACGACCTGTCCGGC---------------
+>contig01265  length=139   numreads=11 (rev)
+---------------------------------------------------------------------------CCGGGCGAGTTGCTGGTTGAAGTGCATGCCGCCAGCGTGAACCCGGTCGACTTCAAGATCCGTGACGGCATGCTGAAGATGATCATCCCCTTCGGGTTTCCGCTCATCCTCGGCAACGATCTCTccggc---------------
+>contig01359  length=132   numreads=50 (rev)
+---------------------------------------------------------------------------CCGGGCGAGCTGCTGGTGGGGGTGCATGCCGCCAGCGTGAATCCGGTGGACTTCAAGATCCGCGACGGCATGCTGAAAATGATCATTCCCTTCGGCTTCCCGCTCATCCTCGGCAACGATTTGTCC------------------
+>contig01426  length=128   numreads=15
+------------------------------------------------------------------------------cacgaTCTCTTGGTCGATGTGGCTGCCGCCAGCGTCAATCCCATCGATTTCAAGACGCGCGCCGGTCTGACCAAGGTGCTGCTGCCCTACCGTTTTCCGCTCACGCTGGGGAACGATCTGGCCGGC---------------
+>contig01524  length=122   numreads=7 (rev)
+---------------------------------------------------------------------------------gatctcGTGGTGGAGGTGCGCGCGGCGAGCGTGAACCCgGTGGATTTCAAGATCCGCGcGGGcCAGGTCAAGGTGCTCATCAAGGACACGTTTCCCCTCGTCCTCgGTTCGGAT------------------------
+>contig01570  length=120   numreads=13 (rev)
+---------------------------------------------------------------CCGGAGTGCGGGCCGCACGACCTGCTGGTGCAGGTGAAGGCGGCCAGCGTGAACCCGGTGGATTGGAAGATCCGCGACGGCAAGCTCAAGGTCATGATCCACTAcCGGcngccg------------------------------------------

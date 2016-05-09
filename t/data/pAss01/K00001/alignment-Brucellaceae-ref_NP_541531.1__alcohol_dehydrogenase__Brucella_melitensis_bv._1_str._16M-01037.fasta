@@ -1,0 +1,8 @@
+>ref|NP_541531.1| alcohol dehydrogenase [Brucella melitensis bv. 1 str. 16M]
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------L--D--A--A--G--V--Q--Y--G--V--F--S--D--V--K--P--N--P--V--E--S--N--L--H--A--G--V--K--V--F--R--E--G--R--H--D--G--V--I--A--F--G--G--G--S--
+>contig01318  length=133   numreads=8
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------CTGCGcGAcGCGGGcTACgCcGTcGGtcTcTTCTCCGATGTGAAGCCCAACCCGatttCGGCCAACGTCAATGCCGGcGtcGAGgTGctGCGCAAaGgCGGcCATGAcGGCGTCATCGcT---------------
+>contig01603  length=115   numreads=8
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------AATGTcaGgCCcAAtCcGGTCGAATCGAACATCACCGAaGgCGTCGAAGCCTTCAAGGCtGgCAAGCAtGAcGGCGTCATTGCCTTTGGCGGC------
+>contig01686  length=110   numreads=6 (rev)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------tttCGCCGACGTGCgccCaAcCCGGTgGAGGAGAAcGTGCTCGCCGGCTGCAAGGtGTTCAAGGacGGcaAgCATGAcGGcGtcgTGGCGCTGGGCGGCGGCTCC
