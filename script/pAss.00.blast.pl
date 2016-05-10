@@ -20,7 +20,7 @@ my @specs = (
 
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
-$opt->validate({'requires' => ['format', 'contigs', 'kodb', 'output']});
+$opt->validate({'requires' => ['contigs', 'kodb', 'output']});
 
 $|++;
 my $threads = $opt->get_threads;
@@ -31,7 +31,7 @@ system "mkdir $outputdir";
 my $kodb         = $opt->get_kodb;
 my %kohash;
 my $toFormat = $opt->get_format;
-
+#
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
 {
@@ -39,8 +39,6 @@ for (<"$kodb/*">)
     $kohash{$&}++;
     if($toFormat){
         `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
-        #Legacy blast
-        #`formatdb -i $kodb/$& -o T -n $kodb/$&`;
         say STDERR $_;
     }
 }
@@ -48,7 +46,6 @@ say STDERR "    #stored KOs";
 
 for my $indivKO (keys %kohash)
 {
-
     $pm->start and next;
     runBLAST($indivKO, $opt->get_contigs, $opt->get_output);
     $pm->finish;
@@ -73,12 +70,10 @@ sub runBLAST($ko, $contigPath, $output)
         -num_descriptions 10 \\
         -num_alignments 10 \\
         -num_threads $threads`;
-    #translated from Legacy blast command written by XC
-    #blastx -v 10 -b 10 -F F -e 1e-5 -a 4 -d $kodb/$& -i $contigPath/$1/454AllContigs.fna -o $output/$1.blastx
-    say "$ko blasted";
+    say STDERR "$ko blasted";
 }
 
-say "Blasting is complete";
+say STDERR "Blasting is complete";
 =pod
 
 =head1 NAME

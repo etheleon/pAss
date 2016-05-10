@@ -25,10 +25,16 @@ my @specs = (
 my $opt = Getopt::Lucid->getopt( \@specs );
 pod2usage(-verbose=>2) if $opt->get_help;
 
-my $path_to_blastn = qx(which makeblastdb);
-unless ($path_to_blastn) { die "\nERROR: makeblastdb not found"; }
+my $path_to_makeblastdb = qx(which makeblastdb);
+unless ($path_to_makeblastdb) { die "\nERROR: makeblastdb not found"; }
 
-$opt->validate({'requires' => ['format','refseqKO','outputDIR','contigs']}); #dun chain, else help wont print
+my $path_to_blastx = qx(which blastx);
+unless ($path_to_blastx) { die "\nERROR: blastx not found"; }
+
+my $path_to_muscle = qx(which muscle);
+unless ($path_to_muscle) { die "\nERROR: muscle not found"; }
+
+$opt->validate({'requires' => ['refseqKO','outputDIR','contigs']}); #dun chain, else help wont print
 
 my $outputDir     = $opt->get_outputDIR;
 my $refseqProtDB  = $opt->get_refseqKO;
@@ -38,63 +44,63 @@ my $contigDir     = $opt->get_contigs;
 my $meganPath     = $opt->get_megan;
 my $meganLicense  = $opt->get_meganLicense;
 
-
-`mkdir $outputDir`;
+`mkdir $outputDir` unless -d $outputDir;
 
 say "## Using $MAX_PROCESSES threads";
 
 say "## Blasting"; ##################################################
-`$Bin/script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir`;
+#$toFormat ?
+#`$Bin/script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --format $toFormat --contigs $contigDir`:
+#`$Bin/script/pAss.00.blast.pl --threads $MAX_PROCESSES --kodb $refseqProtDB --output $outputDir/pAss00 --contigs $contigDir`;
 
-say "MEGAN aln"; ##################################################
-my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
-{   chomp $ko;
-    $pm0->start and next;
-    say "Processing $ko";
-    `mkdir -p $outputDir/pAss01/$ko`;
-    `script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense $meganLicense --output $outputDir/pAss01/$ko`;
-    $pm0->finish;
-}
-$pm0->wait_all_children;
+#say "MEGAN aln"; ##################################################
+#my $pm0 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/pAss00/ | sed s/\.blastx//`)
+#{   chomp $ko;
+#    $pm0->start and next;
+#    say "Processing $ko";
+#    `mkdir -p $outputDir/pAss01/$ko` unless -d '$outputDir/pAss01/$ko';
+#    `$Bin/script/pAss.01.msa.pl --queryFasta $contigDir/$ko/454AllContigs.fna --blastFile $outputDir/pAss00/$ko.blastx --megan $meganPath --meganLicense $meganLicense --output $outputDir/pAss01/$ko`;
+#    $pm0->finish;
+#}
+#$pm0->wait_all_children;
 
 say "## Generating MSA"; ##################################################
 my $pm = Parallel::ForkManager->new($MAX_PROCESSES);
 foreach my $ko (`ls $outputDir/pAss01/ | grep -v log`) #need to change this; this is hard coded
 {   chomp $ko;
     $pm->start and next;
-    `script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/pAss01/$ko --out $outputDir/pAss03 --ko $ko`;
+    `$Bin/script/pAss.03.master.msa.pl --refseqFasta $refseqProtDB/ko:$ko --msadir $outputDir/pAss01/$ko --out $outputDir/pAss03 --ko $ko`;
     $pm->finish;
 }
 $pm->wait_all_children;
 
-
-say "## MSA Diagnostics"; #################################################
-`mkdir $outputDir/pAss04`;
-`mkdir $outputDir/pAss10`;
-
-my $pm3 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/pAss03/ | grep -v temp | sed s/\.msa//g`)
-{
-    chomp $ko;
-    $pm3->start and next;
-    `script/pAss.04.msa2group.pl --msa $outputDir/pAss03/$ko.msa --outputPrefix $outputDir/pAss04/$ko`;
-    `script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/pAss03/$ko.msa --outputDir $outputDir/pAss10/$ko`;
-    $pm3->finish;
-}
-$pm3->wait_all_children;
-
-say "## Output MaxDiveristy Region";
-    `mkdir $outputDir/pAss11`;
-my $pm4 = Parallel::ForkManager->new($MAX_PROCESSES);
-foreach my $ko (`ls $outputDir/pAss10/`)
-{
-    chomp $ko;
-    $pm4->start and next;
-    `script/pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/`;
-    $pm4->finish;
-}
-$pm4->wait_all_children;
+#say "## MSA Diagnostics"; #################################################
+#`mkdir $outputDir/pAss04` unless -d '$outputDir/pAss04';
+#`mkdir $outputDir/pAss10` unless -d '$outputDir/pAss10';
+#
+#my $pm3 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/pAss03/ | grep -v temp | sed s/\.msa//g`)
+#{
+#    chomp $ko;
+#    $pm3->start and next;
+#    `$Bin/script/pAss.04.msa2group.pl --msa $outputDir/pAss03/$ko.msa --outputPrefix $outputDir/pAss04/$ko`;
+#    `$Bin/script/pAss.10.maxDiversity.pl --minLength 200 --inputFile $outputDir/pAss03/$ko.msa --outputDir $outputDir/pAss10/$ko`;
+#    $pm3->finish;
+#}
+#$pm3->wait_all_children;
+#
+#say "## Output MaxDiveristy Region";
+#    `mkdir $outputDir/pAss11`;
+#my $pm4 = Parallel::ForkManager->new($MAX_PROCESSES);
+#foreach my $ko (`ls $outputDir/pAss10/`)
+#{
+#    chomp $ko;
+#    $pm4->start and next;
+#    `script/pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/`;
+#    $pm4->finish;
+#}
+#$pm4->wait_all_children;
 
 #Documentation
 =pod

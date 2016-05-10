@@ -10,8 +10,41 @@ use Statistics::Basic qw/mean stddev/;
 use List::MoreUtils qw/uniq/;
 use Data::Dumper;
 
-#main methods
-#1
+=pod
+
+=head1 NAME
+
+pAss library
+
+=head1 SYNOPSIS
+
+library for generating prot MSA guided MSA of nt contigs
+
+=head1 Initialise
+
+C<my $alignment = PASS::Alignment->new(>
+C<    refseqFasta     =>  "$FindBin::Bin/data/refSeqProtDB/ko\:K00001", #reference sequences>
+C<    alignmentFiles  =>  [glob("$FindBin::Bin/data/pAss01/K00001/alignment-*")],>
+C<    outputPrefix    =>  "$FindBin::Bin/data/pAss",>
+C<)>
+
+=head1 Methods
+
+=cut
+
+=pod
+
+=over
+
+=item $obj->storeRefseq()
+
+Stores information about the protein reference sequences.
+Calculates the min and max length allowed for the sequence to be included in the MSA
+
+=back
+
+=cut
+
 sub storeRefseq($self){
     my $dbin = Bio::SeqIO->new(
         -file=>$self->refseqFasta,
@@ -21,14 +54,29 @@ sub storeRefseq($self){
         my $refseqID = $self->grepRefSeqID($seqObj->display_id);
         $self->{refseq}{$refseqID} = {seq => $seqObj->seq, length => $seqObj->length}
     };
-}
-#2
-sub assignContig2ref($self){
     $self->minmax;
+	for my $refseqID (keys $self->{refseq}->%*){
+		my $isCorrectLength = $self->{refseq}{$refseqID}{length} > $self->min &&  $self->{refseq}{$refseqID}{length} < $self->max;
+        $self->{refseq}{$refseqID}{safe} = $isCorrectLength ? 1 : 0;
+	}
+}
+
+=pod
+
+=over
+
+=item $obj->assignContig2ref( %options )
+
+Determines which contig be mapped to which protein reference sequences
+
+=back
+
+=cut
+
+sub assignContig2ref($self){
 
     for my $alignmentFile ($self->alignmentFiles->@*)
     {
-#        my $msaFile = (split /\//, $alignmentFile)[-1];
         my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta');
 
 #       PROTEIN SEQUENCE
@@ -38,11 +86,7 @@ sub assignContig2ref($self){
         #1. left out cause their reference sequences are all the same length; SD is low and the alignment length is not the length
         #2. Too little reference sequences
         #etc.
-        my $isCorrectLength = $self->{refseq}{$refseqID}{length} > $self->min &&  $self->{refseq}{$refseqID}{length} < $self->max;
-        #refseq sequences shd be trimmed because ltr we will pivot the choice of alignment based on whther the sequence is too long;
-        $self->{refseq}{$refseqID}{safe} = $isCorrectLength ? 1 : 0;
-        next unless $isCorrectLength;
-
+		next unless $self->{refseq}{$refseqID}{safe};
 
 # PARSE CONTIG MSA (DNA)
         while(my $seqObj = $in->next_seq){
@@ -65,59 +109,92 @@ sub assignContig2ref($self){
                     #say "Found better match";
                     $self->{contigs}{$contigID} = $contigDetails
                 }}}}}
-#3
-sub runMuscle($self){
+
+
+=pod
+
+=over
+
+=item $obj->runMuscle( %options )
+
+Runs muscle on the stored reference protein sequence.
+
+Whether to load a fixed set of aligned MSAs or run a MUSCLE from the beginning
+
+=back
+
+=cut
+
+sub runMuscle($self, $preran=0){
     #muscle is heuristic, each run will give you a different output
-    my $out = $self->outputPrefix;
-    my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa", -fasta => "fasta");
-    $MSAout->width(1000);
-    my @protRef = uniq map {$self->{contigs}{$_}{parentREF}} keys $self->contigs->%*;
-    say "number of reference sequences included: ", scalar @protRef;
-    foreach (@protRef){
-        my $outputSeq = Bio::Seq->new(
-            -display_id => $_,
-            -seq        => $self->{refseq}{$_}{seq},
-            -alphabet   => 'protein');
-        $MSAout->write_seq($outputSeq);
-    }
+		my $out = $self->outputPrefix;
+	unless($preran){
+		my $MSAout = Bio::SeqIO->new(-file => ">$out.temp.ref.faa", -fasta => "fasta");
+		$MSAout->width(1000);
+		my @protRef = uniq map {$self->{contigs}{$_}{parentREF}} keys $self->contigs->%*;
+		say "number of reference sequences included: ", scalar @protRef;
+		foreach (@protRef){
+			my $outputSeq = Bio::Seq->new(
+			-display_id => $_,
+			-seq        => $self->{refseq}{$_}{seq},
+			-alphabet   => 'protein');
+			$MSAout->write_seq($outputSeq);
+		}
 
-    say     STDERR "##\t ::b:: Generate MSA with Muscle";
-    print   STDERR '#' x 50;
-    system  "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa";
-    print   STDERR '#' x 50;
-    say     STDERR "";
+		say     STDERR "##\t ::b:: Generate MSA with Muscle";
+		print   STDERR '#' x 50;
+		system  "muscle -in $out.temp.ref.faa -out $out.temp.ref.msa";
+		print   STDERR '#' x 50;
+		say     STDERR "";
+	}
 
-    my $MUSCLEinput=Bio::SeqIO->new(-file=>"$out.temp.ref.msa", -format=>"fasta")                                                    ;
-    while(my $seqObj = $MUSCLEinput->next_seq)                                                                                       {
-        my $seq = $seqObj->seq                                                                                          ;
-        my $refseqID = $seqObj->display_id                                                                                    ;
-        my $aaIndex = 1                                                                                                   ;
+	my $inputFile = $preran ? $preran : "$out.temp.ref.msa";
+    my $MUSCLEinput=Bio::SeqIO->new(-file=>$inputFile, -format=>"fasta");
+    while(my $seqObj = $MUSCLEinput->next_seq)
+	{
+        my $seq = $seqObj->seq;
+        my $refseqID = $seqObj->display_id;
+        my $aaIndex = 1;
         while($seq =~ m/[^-]/g)
         {
             #$-[0] is zero index
-            my $msaLOC = $-[0] + 1                                                                                       ;
-            $self->{refseq}{$refseqID}{map}{$aaIndex} = $msaLOC                                                                              ;
+            my $msaLOC = $-[0] + 1;
+            $self->{refseq}{$refseqID}{map}{$aaIndex} = $msaLOC;
             $aaIndex++;
         }
     }
 }
-#4
+
+=pod
+
+=over
+
+=item $obj->buildContigMSA()
+
+Two step process,
+Stores the location of each amino acid from the blastX alignment in the alignment object.
+
+=back
+
+=cut
+
 sub buildContigMSA($self){
     #gives a reference keypair of locations key:position value:aa
     foreach my $alignmentFile ($self->alignmentFiles->@*){
         my $in=Bio::SeqIO->new(-file => $alignmentFile, -format => "fasta");
         my $seqObj = $in->next_seq;
-        my $refseqID             =  $seqObj->display_id;
-        my $fullRefseqSeq = $self->{refseq}{$refseqID}{seq};
+        my $refseqID = $self->grepRefSeqID($seqObj->display_id);
 
-        ###################################################
-        #Step1: Process Refseq alignment
-        ###################################################
         my $isReferenceSeq  =  ($refseqID =~ m/^ref\|/);
         my $isGood = $self->{refseq}{$refseqID}{safe};
         if($isReferenceSeq && $isGood)
         {
-            delete $self->{refseq}{$refseqID}{ntMSALoc};
+
+        ###################################################
+        #Step1: Process Refseq alignment
+        ###################################################
+			my $fullRefseqSeq = $self->{refseq}{$refseqID}{seq};
+            delete $self->{refseq}{$refseqID}{ntMSALoc}; #why? shouldnt delete other files have this as well?
             my $fullAlignment = $seqObj->seq;
             my $offset = 0;
             while($fullAlignment =~ m/(?<continuousAA>(?<codon>[^-]--)+)/g)
@@ -141,7 +218,7 @@ sub buildContigMSA($self){
             }
 
             ###################################################
-            #Step2: NT Contigs
+            #Step2: NT Contigs: its not just NT sequences from a single alignment file handed down from
             ###################################################
             while($seqObj = $in->next_seq){
                 my $contigID = $seqObj->display_id;
@@ -232,6 +309,7 @@ handle => [],
 has outputPrefix =>(
 is=>'ro',
 required=>1,
+default=>"out"
 );
 
 #Refseq sequences & lengths

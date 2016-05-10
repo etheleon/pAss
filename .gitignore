@@ -11,3 +11,5 @@ local
 *.psq
 *.snapshot
 error.log
+MEGAN5-academic-license.txt
+MEGAN_unix_5_*_*.sh

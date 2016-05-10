@@ -25,7 +25,7 @@ $opt->validate({'requires' => ['refseqFasta', 'msadir', 'out']})               ;
 my $refseqFasta = $opt->get_refseqFasta                                        ;
 my $msadir      = $opt->get_msadir                                             ;
 my $out         = $opt->get_out                                                ;
-system "mkdir -p $out";
+system "mkdir -p $out" unless -d "$out";
 my $ko = $opt->get_ko;
 
 $out .= "/$ko";
