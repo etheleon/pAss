@@ -1,6 +1,10 @@
+#!/usr/bin/env perl
+
 use strict;
 use warnings;
 
+use FindBin qw/$Bin/;
+use local::lib "$Bin/../local";
 use Modern::Perl '2015';
 use experimental qw/postderef signatures/;
 use PASS::Alignment;
@@ -9,39 +13,23 @@ use FindBin;
 use Data::Dumper;
 my $module = 'PASS::Alignment';
 
+say "Testing PASS::Alignment package...";
 use_ok($module)
     or BAIL_OUT("Does $module.pm compile?  Does it end with 1; ?");
 
-#Check functions are present
-can_ok($module, 'storeRefseq')
-    or BAIL_OUT("Missing package $module; or missing sub storeRefseq()");
-can_ok($module, 'assignContig2ref')
-    or BAIL_OUT("Missing package $module; or missing sub assignContig2ref()");
-can_ok($module, 'runMuscle')
-    or BAIL_OUT("Missing package $module; or missing sub runMuscle()");
-can_ok($module, 'buildContigMSA')
-    or BAIL_OUT("Missing package $module; or missing sub buildContigMSA()");
-can_ok($module, 'grepRefSeqID')
-    or BAIL_OUT("Missing package $module; or missing sub grepRefSeqID()");
-can_ok($module, 'minmax')
-    or BAIL_OUT("Missing package $module; or missing sub minmax()");
-
-
-#Build an alignment OBJ
+say "Initialise object";
 my $alignment = PASS::Alignment->new(
     refseqFasta     =>  "$FindBin::Bin/data/refSeqProtDB/ko\:K00001", #reference sequences
     alignmentFiles  =>  [glob("$FindBin::Bin/data/pAss01/K00001/alignment-*")],
     outputPrefix    =>  "$FindBin::Bin/data/pAss",
 )                                                                              ;
 
-#TEST METHODS
-## storeRefseq
+say "Test methods:\n\t".'$obj->storeRefseq';
 $alignment->storeRefseq();
-
 ok scalar keys $alignment->{refseq}->%* == 772,
-    "Loading: read allContigs In";
+    "Loaded the correct number of contigs";
 
-## assignContig2ref
+say "\t",'$obj->assignContig2ref';
 $alignment->assignContig2ref();
 my @missing;
 for my $contigKey (keys $alignment->{contigs}->%*)
@@ -54,28 +42,25 @@ for my $contigKey (keys $alignment->{contigs}->%*)
         }
     }
 }
+is scalar @missing, 0, "Contigs matched to best aligned reference sequence";
 
-is scalar @missing, 0, "Everyone is partnered";
 
+say "\t",'$obj->runMuscle';
 $alignment->runMuscle("data/pAss03/K00001.temp.ref.msa");
-
 my @protMSAPositions = sort {$a <=> $b} values $alignment->{refseq}{'ref|NP_711797.1|'}{map}->%*;
 
-
     my $msa = <DATA>; chomp $msa;
-
     my ($lastLetter) = $msa =~ m/([A-Z])-+$/;
-#zero indexed
+    #zero indexed
     my $position = $-[0];
     $position++;
-
     my @aaloc = sort {$a <=> $b} keys $alignment->{refseq}{'ref|NP_711797.1|'}{map}->%*;
     $msa =~ s/-//g;
 
-is scalar @aaloc, length $msa, "protein sequences are the same length";
-is $protMSAPositions[-1], $position, "last letter is the same MSA loc";
+is scalar @aaloc         , length $msa , "Load in protein MSA sequences";
+is $protMSAPositions[-1] , $position   , "last letter is the same MSA loc";
 my $lastLetterObj = substr $alignment->{refseq}{'ref|NP_711797.1|'}{seq}, -1;
-is $lastLetterObj, $lastLetter, "last letter is the same alphabet";
+is $lastLetterObj        , $lastLetter , "last letter is the same alphabet";
 
 
 ##buildContigMSA
@@ -83,36 +68,48 @@ is $lastLetterObj, $lastLetter, "last letter is the same alphabet";
 #it seems like all the sequences at least for K00001 have the above structure
 
 #Part1:
-my $fullAlignment = "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------S--L--D--A--L--G--S--P--V--T--C--V--A--S--V--N--G--L--R--R--R--G--R--H--V--Q--V--G--L--L--P--S--S--T--G--S-----T--P--V--P--M--A--R--V--I--G--L--E--L--E--V--L--G--S--H--G--M--A--A--H--A--Y--P--P--M--L--E--L--";
-my $fullRefseqSeq = "MRAVVFERFGEPAEVREVADPEPSEHGVVVRVEATGLCRSDWHGWVGHDPDITLPHVPGHELAGVVEAVGTRVSGWRPGDRVTVPFVCACGSCAACAAGDQQVCERQAQPGFTHWGSFAQYVALEHADVNLVAMPDELSFGTAAALGCRFATAFRAVVAQGRVAAGEWVAVHGCGGVGLSAVMIAAASGARVVAVDVSPQALDLARKFGAAASVDASRVEDTAAAVRELTGGGAHLSLDALGSPVTCVASVNGLRRRGRHVQVGLLPSSTGSTPVPMARVIGLELEVLGSHGMAAHAYPPMLELVRAGVLRPDLLVTSAIPLDTAPIALAAMGTAPGAGVTVIEPWR";
-my $obj;
+say "Refseq of interest:\t\t\tref|NP_711797.1|";
+say "Contig: $_ Parent: \t\t$alignment->{contigs}{$_}{parentREF}" for qw/contig00025 contig01042 contig01169/;
 
-my $offset = 0;
-while($fullAlignment =~ m/(?<continuousAA>(?<codon>[^-]--)+)/g)
-{
-    #will only match X-- patterns so wont work for ----
-    my $start           =  $-[0];  #zero indexed position where the continuous stretch of amino acid position begin
-    say "start: ", $start;
-    say "start loc:", substr($fullAlignment, eval{$start - 3});
-    my $spacedSeq       =  $+{continuousAA};
-    (my $continuousSeq  =  $spacedSeq) =~ s/-//g;
-    my $index           =  index(substr($fullRefseqSeq, $offset), $continuousSeq);  #incomplete alignment with the reference sequernce
-    my $aa              =  0;
-    while($spacedSeq =~ m/[^-]/g)
-    {
-    $aa++;                          #move stepwise from 1 aa to the next aa
-    my $ntLoc = $start + $-[0] + 1; #plus one cause ltr we will do substr
-    $obj->{ntMSALoc}{$ntLoc} = $aa + $offset + $index; #AA position
-    }
-    $offset += length $continuousSeq;
-}
-say "hello";
-#for (sort {$a <=> $b} keys $obj->{ntMSALoc}->%*){say "$_\t$obj->{ntMSALoc}{$_}}
+is $alignment->{refseq}{'ref|NP_711797.1|'}{map}{107}, 246, "the protein MSA is stored properly";
+$alignment->buildContigMSA();
 
-
+is $alignment->{contigs}{'contig01042'}{globalCoordinates}{246}, 'GCG', 'contig01042 match';
+is $alignment->{contigs}{'contig01169'}{globalCoordinates}{466}, 'GTT', 'contig01169 match';
+is $alignment->{contigs}{'contig00025'}{globalCoordinates}{278}, 'ggt', 'contig00025 match';
 #use 'ref|NP_711797.1|' to test again.
-data/pAss01/K00001/alignment-Leptospira_interrogans-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01029.fasta
-data/pAss01/K00001/alignment-cellular_organisms-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01553.fasta
+#data/pAss01/K00001/alignment-Leptospira_interrogans-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01029.fasta
+#data/pAss01/K00001/alignment-cellular_organisms-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01553.fasta
+
+my $Finalout=Bio::SeqIO->new(-file=>">K00001.contig.msa",-format=>"fasta");
+#$Finalout->width(10000);
+my @coi = qw/contig00025 contig01042 contig01169/;
+#say Dumper $alignment->{contigs}{'contig00025'};
+foreach my $contigID (sort keys $alignment->{contigs}->%*)
+{
+    if($contigID ~~ @coi){
+    my @contigSeq;
+    my $contigObj = Bio::Seq->new(
+        -display_id => $contigID,
+        -alphabet =>'dna',
+    );
+    say $contigID;
+    my $parent      = $alignment->{contigs}{$contigID}{parentREF};
+    my %contigHash  = $alignment->{contigs}{$contigID}{globalCoordinates}->%*;
+#
+    for my $aaXaa (sort {$a <=> $b } keys $alignment->{pos}->%*)
+    {
+#        say $aaXaa; #this is the positions for the whole protein msa
+        my $codon = exists $contigHash{$aaXaa} ? $contigHash{$aaXaa} : '---';
+        push @contigSeq,$codon;
+    }
+    my $fullsequence = join '', @contigSeq;
+    #say $fullsequence;
+    $contigObj->seq($fullsequence);
+    $contigObj->desc($parent);
+    $Finalout->write_seq($contigObj);
+    }
+}
 
 
 ##grepRefSeqID

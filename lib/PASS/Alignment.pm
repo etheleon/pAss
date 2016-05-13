@@ -67,49 +67,83 @@ sub storeRefseq($self){
 
 =item $obj->assignContig2ref( %options )
 
-Determines which contig be mapped to which protein reference sequences
+=head3 Determines which contig be mapped to which protein reference sequences
+
+In some cases, no contigs are considered for a particular KO because:
+
+=over 3
+
+=item 1. length of sequences
+
+Entirely KO is left out cause their reference sequences are all the same length;
+SD is low and the alignment length is not the length (this doesnt make sense)
+
+=item 2. # of observations
+
+Too little reference sequences to build a MSA.
+
+=back
+
+For the same sequence, we observe it being put into different files by MEGAN. eg. with different alignment...
+NOTE: this is already taken care of by assignContig2ref so no problem
+
+data/pAss01/K00001/alignment-Leptospira_interrogans-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01029.fasta
+>ref|NP_711797.1| alcohol dehydrogenase [Leptospira interrogans serovar Lai str.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------A--K--A--L--S--V--M--M--C--N--E--G--S--A--S--Q--Y--Q--G--W--D--L--V--P--N--P--G--I
+--Y--K--I--G--I--P--T--V--A--G--S--G--A--E--A--S--R--T--A--V--L-----------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------V--F--L--S--D--G--D--D--D--M--L--L--T--A--S--Y--M--G--G--V--S--I--V--N--S--E--V--G--V--C--H--A--L--S--Y--G--L--S--L--E--L-
+-G--Y--R--H--G--F--A--
+
+
+data/pAss01/K00001/alignment-cellular_organisms-ref_NP_711797.1__alcohol_dehydrogenase__Leptospira_interrogans_serovar_Lai_str.-01553.fasta
+>ref|NP_711797.1| alcohol dehydrogenase [Leptospira interrogans serovar Lai str.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------G--W--D--L--V--P--N--P--G--I
+--Y--K--I--G--I--P--T--V--A--G--S--G--A--E--A--S--R--T--A--V--L--M--G--K--E--R--K--F--G--I--N--S--D--H--S--M--F--D--A--I--I--L--D--S--S--L--I--K--N--V--P--I--A--Q--R--F--Y--S--G--M--D--C--Y--I--H--C--
+V--E--S--L--Q--G--T--M--I--N--E--L--A--K--G--N--A--S--K--A--L--E--L--C--E--K--V--F--L--S--D--G--D--D--D--M--L--L--T--A--S--Y--M--G--G--V--S--I--V--N--S--E--V--G--V--C--H--A--L--S--Y--G--L--S--L--E--L-
+-G--Y--R--H--G--F--A--N--C--V--A--F--N--V--L--D--E--Y--Y--G--P--W--V--D--R--F--R--E--M--L--K--I--H--
 
 =back
 
 =cut
 
 sub assignContig2ref($self){
-
     for my $alignmentFile ($self->alignmentFiles->@*)
     {
         my $in = Bio::SeqIO->new(-file=>$alignmentFile,-format=>'fasta');
+			#INJEST PROTEIN SEQUENCE
+			my $refObj = $in->next_seq;
+			my $refseqID = $self->grepRefSeqID($refObj->display_id);
+			next unless $self->{refseq}{$refseqID}{safe};
 
-#       PROTEIN SEQUENCE
-        my $refObj = $in->next_seq;
-        my $refseqID = $self->grepRefSeqID($refObj->display_id);
-        #Some KOs cannot proceed because
-        #1. left out cause their reference sequences are all the same length; SD is low and the alignment length is not the length
-        #2. Too little reference sequences
-        #etc.
-		next unless $self->{refseq}{$refseqID}{safe};
-
-# PARSE CONTIG MSA (DNA)
-        while(my $seqObj = $in->next_seq){
+		#PARSE NT CONTIG
+        while(my $seqObj = $in->next_seq)
+		{
             my $contigID  =  $seqObj->display_id;
             my $sequence = $seqObj->seq;
             my $gap = ($sequence =~ s/-//g);
             my $length = length $sequence;
-            $length -= $gap / 1e6;
+            $length -= $gap / 1e6; #this parameter represents the length of the alignment - the number of gaps,
             #say "$alignmentFile\n$refseqID\t$length" if $contigID eq 'contig00049';
             my $contigDetails = {
-                seq  =>  $seqObj->seq,
-                len =>   $length,
+                seq  	  =>  $seqObj->seq,
+                len 	  =>   $length,
                 parentREF => $refseqID,
             };
             if(!exists $self->{contigs}{$contigID}){
                 $self->{contigs}{$contigID} = $contigDetails;
             }else{
+				#if alignment is longer, then use this alignment
                 my $isBetterMatch = $contigDetails->{len} > $self->{contigs}{$contigID}{len};
                 if ($isBetterMatch){
                     #say "Found better match";
                     $self->{contigs}{$contigID} = $contigDetails
-                }}}}}
-
+                }
+			}
+		}
+	}
+}
 
 =pod
 
@@ -174,6 +208,12 @@ sub runMuscle($self, $preran=0){
 Two step process,
 Stores the location of each amino acid from the blastX alignment in the alignment object.
 
+Process
+
+	1. loops thru each contig-reference protein alignment (rmbr there might be duplicates, ie above)
+		CHECK: refseq prot meets the size requirement and alignment.
+	2.
+
 =back
 
 =cut
@@ -189,12 +229,12 @@ sub buildContigMSA($self){
         my $isGood = $self->{refseq}{$refseqID}{safe};
         if($isReferenceSeq && $isGood)
         {
-
+		#i think i have to rewrite this portion OMG!!!!
         ###################################################
         #Step1: Process Refseq alignment
         ###################################################
 			my $fullRefseqSeq = $self->{refseq}{$refseqID}{seq};
-            delete $self->{refseq}{$refseqID}{ntMSALoc}; #why? shouldnt delete other files have this as well?
+            delete $self->{refseq}{$refseqID}{ntMSALoc}; #the ntMSALoc is only temporary for that file; the really impt one is for
             my $fullAlignment = $seqObj->seq;
             my $offset = 0;
             while($fullAlignment =~ m/(?<continuousAA>(?<codon>[^-]--)+)/g)
@@ -252,7 +292,7 @@ sub buildContigMSA($self){
                             $self->{contigs}{$contigID}{globalCoordinates}{$aaXaa} = $+{codon};
                         }else
                         {
-                            #if there isnt any match of aa then increment the position by 1/1e6
+                            #if there isnt any match of aa ie. the codons match to a gap then increment the position by 1/1e6
                             $aaXaa+=1/1e6;
                             #say "doesnt exists: $contigID\t$aaXaa";
                             $self->{contigs}{$contigID}{globalCoordinates}{$aaXaa} = $+{codon};
