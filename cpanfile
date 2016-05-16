@@ -1,3 +1,4 @@
+requires 'Module::Install';
 requires 'Modern::Perl';
 requires 'Moo';
 requires 'Bio::SeqIO';
