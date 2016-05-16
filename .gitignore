@@ -1,14 +1,6 @@
 testData
 testOut
 local
-*.pog
-*.pnd
-*.pin
-*.psi
-*.pni
-*.phr
-*.psd
-*.psq
 *.snapshot
 error.log
 MEGAN5-academic-license.txt
