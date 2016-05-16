@@ -15,6 +15,7 @@
 
 #run
 ../maxDiversity \
+    --format \
     --outputDIR=$PWD/testOut \
     --refseqKO=$PWD/testData/refSeqProtDB \
     --contigs=$PWD/testData/contigs \
