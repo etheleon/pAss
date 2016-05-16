@@ -19,5 +19,5 @@ requires       'Getopt::Lucid'     =>   '1.05';
   #recommends     'Text::CSV_XS'=> '0.50';
   #no_index       'directory'   => 'demos';
   #install_script 'myscript';
-
+license 'perl';
 WriteAll;
