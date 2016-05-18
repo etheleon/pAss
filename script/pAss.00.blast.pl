@@ -27,7 +27,7 @@ my $threads = $opt->get_threads;
 my $pm = Parallel::ForkManager->new($threads);
 
 my $outputdir = $opt->get_output;
-system "mkdir $outputdir" unless -d $outputdir
+system "mkdir $outputdir" unless -d $outputdir;
 my $kodb         = $opt->get_kodb;
 my %kohash;
 my $toFormat = $opt->get_format;
