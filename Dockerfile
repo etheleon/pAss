@@ -51,29 +51,29 @@ RUN cp /tmp/muscle3.8.31_i86linux64 /usr/bin/muscle
 
 RUN apt-get install perl-doc
 RUN apt-get install -y git
-RUN groupadd -r maxdiversity && adduser --ingroup maxdiversity --disabled-password --gecos "" wesley
-USER wesley
+#RUN groupadd -r maxdiversity && adduser --ingroup maxdiversity --disabled-password --gecos "" wesley
+#USER wesley
 
 #PASS
-RUN git clone https://github.com/etheleon/pAss.git /tmp/pAss
+RUN git clone -b docker https://github.com/etheleon/pAss.git /tmp/pAss
 
 RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
-    /home/wesley/perl5/bin/cpanm local::lib Carton Module::Install 
+    cpanm local::lib Carton Module::Install 
 
 WORKDIR /tmp/pAss
-RUN perl -I /home/wesley/perl5/lib/perl5 /home/wesley/perl5/bin/carton
+RUN carton
 
-RUN perl -I ./local/lib/perl5 Makefile.PL PREFIX=./local/ && \
+RUN perl Makefile.PL PREFIX=./local/ && \
     make && \
     make install
 
-VOLUME ["/data/contigs", "data/refSeqProtDB", "data/out", "data/misc"]
 ENV PATH=/usr/local/megan:/tmp/pAss:${PATH}
-RUN echo "export PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1:/home/wesley/perl5/lib/perl5" >> ~/.bashrc
-ENV R_LIBS=/home/wesley/R_libs:/usr/lib/R/library
-RUN mkdir /home/wesley/R_libs
+ENV PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1
 RUN R -e 'install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")'
+RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")'
 CMD ["/tmp/pAss/maxDiversity --help"]
+VOLUME ["/data/contigs", "data/refSeqProtDB", "data/out", "data/misc"]
+
 
 #################### INSTALLATION ENDS ##############################
 MAINTAINER Wesley GOI <picy2k@gmail.com>
