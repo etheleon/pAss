@@ -35,7 +35,7 @@ my $toFormat = $opt->get_format;
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
 {
-    m/ko:K\d{5}/;
+    m/ko:K\d{5}(?!\.phr|\.pin|\.pnd|\.pni|\.pog|\.psd|\.psi|\.psq)/;
     $kohash{$&}++;
     if($toFormat){
         `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
