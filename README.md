@@ -79,3 +79,10 @@ Example
 
 * KOs where there are too few contigs are not considered 
   * this or may not be IDEAL cause we’re looking for cases where there’s a large amt of RNA reads mapped to a low number o contigs
+
+## Docker 
+
+1. Download the docker `cd` into `examples` folder. 
+2. `mkdir SingleCopyGene/out SingleCopyGene/misc`
+3. Place MEGAN5 license file inside misc
+4. and run `rundocker.sh`
