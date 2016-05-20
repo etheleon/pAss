@@ -60,6 +60,7 @@ foreach my $contigID (sort keys $alignment->{contigs}->%*)
         -alphabet =>'dna',
     )                                                                          ;
     my $parent = $alignment->{contigs}{$contigID}{parentREF}                   ;
+    $parent .= " ".$alignment->{contigs}{$contigID}{direction}
     my %contigHash = $alignment->{contigs}{$contigID}{globalCoordinates}->%*   ;
 
     for my $aaXaa(sort {$a <=> $b } keys $alignment->{pos}->%*)

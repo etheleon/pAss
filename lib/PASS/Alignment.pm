@@ -121,6 +121,8 @@ sub assignContig2ref($self){
         while(my $seqObj = $in->next_seq)
 		{
             my $contigID  =  $seqObj->display_id;
+            my $contigDESC = $seqObj->desc;
+            my $direction = $contigDESC =~ m/\(rev\)/ ? '(rev)' : '(ntRev)';
             my $sequence = $seqObj->seq;
             my $gap = ($sequence =~ s/-//g);
             my $length = length $sequence;
@@ -130,6 +132,7 @@ sub assignContig2ref($self){
                 seq  	  =>  $seqObj->seq,
                 len 	  =>   $length,
                 parentREF => $refseqID,
+                direction => $direction
             };
             if(!exists $self->{contigs}{$contigID}){
                 $self->{contigs}{$contigID} = $contigDetails;
