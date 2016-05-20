@@ -15,9 +15,9 @@ if (!require("Biostrings")){source("http://bioconductor.org/biocLite.R"); biocLi
 if (!require("ggplot2"))    install.packages("ggplot2", repos="http://cran.bic.nus.edu.sg/")
 if (!require("dplyr"))      install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")
 
-library(Biostrings)
-library(dplyr)
-library(ggplot2)
+suppressPackageStartupMessages(library(Biostrings))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
 theme_set(theme_bw())
 
 #' ## Data processing
