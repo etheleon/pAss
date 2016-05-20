@@ -71,7 +71,7 @@ ENV PATH=/usr/local/megan:/tmp/pAss:${PATH}
 ENV PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1
 RUN R -e 'install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")'
 RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")'
-CMD ["/tmp/pAss/maxDiversity --help"]
+CMD ["/tmp/pAss/maxDiversity","--help"]
 VOLUME ["/data/contigs", "data/refSeqProtDB", "data/out", "data/misc"]
 
 
