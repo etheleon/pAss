@@ -2,7 +2,7 @@ pAss - protein-guided Assembler
 ====
 
 [![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss)
-
+![TRAVIS](https://travis-ci.org/etheleon/pAss.svg?branch=docker)
 pAss allows for the enumeration of assembled genes/transcripts within a functional bin.
 
 
