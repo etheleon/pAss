@@ -50,7 +50,7 @@ docker run --rm \
     /tmp/pAss/maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt 
 ```
 
-### Local Install from source
+### Source Installation 
 
 #### Dependencies/Pre-requisites
 
