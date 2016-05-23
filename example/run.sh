@@ -20,4 +20,4 @@ cp -r $PWD/out $PWD/testOut
     --refseqKO=$PWD/testData/refSeqProtDB \
     --contigs=$PWD/testData/contigs \
     --megan=/usr/local/bin/MEGAN \
-    --meganLicense=$PWD/MEGAN5-academic-license.txt
+    --meganLicense=/data/misc/MEGAN5-academic-license.txt
