@@ -1,0 +1,4 @@
+name = "pAss"
+# badges = ["travis"]
+module_maker="ModuleBuildTiny"
+script_files = ['script/*']

@@ -116,7 +116,7 @@ foreach my $contigID (sort keys $alignment->{contigs}->%*)
 
 ##minmax
 
-done_testing();
+done_testing;
 
 __DATA__
 ------------------------------------------------MTSLRIFKQVPRLLF----------------GFNTI-------------DRINELLPK-KNNGDYYIFIID--DVHQKGTIHSRLKHASED-----------------------------MIEWFPASVKEPSTLQ-ID----NLRD--------------KFMQARDHK-----L-----PKAIVGIGGG-STMDVAKA-LSVMMCNEGS---------ASQYQ----GWDLV-PNPGI------YKIGIP-------TVAGSGAEASRTAVLMGKERKFGINS-----------DHS-MFDAIILDS--SLIKNVPIA-QRFYS------GMDCYIHCVESLQ----------------------------GTMINELA-----KGNASKALELC------------------EKVFLSDGDDD---MLLT-ASYMGG---VSIV--N-----------------------SEVGV-CHALSYG------------LSLELGYRHG-------------------------------FANCVAFNVLDEY----Y--------------------------GP-----WVDR---------------FREML-------KIH--------KIELPK----NV---------CRSLDEAA--MQR------MVNMTLK----------MER------------------PLTNA--LGENWKDKMTP----NKIVSLYERM-------------------------------
