@@ -12,7 +12,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : "2"
    },
-   "name" : "pAss",
+   "name" : "PASS-Alignment",
    "no_index" : {
       "directory" : [
          "t",
@@ -42,6 +42,21 @@
       },
       "runtime" : {
          "requires" : {
+             "Array::Utils" : "0",
+            "Bio::SeqIO" : "0",
+            "Getopt::Lucid" : "0",
+            "List::MoreUtils" : "0",
+            "Modern::Perl" : "0",
+            "Module::Install" : "0",
+            "Moo" : "0",
+            "Parallel::ForkManager" : "0",
+            "Set::IntervalTree" : "0",
+            "Statistics::Basic" : "0",
+            "Statistics::R" : "0",
+            "autodie" : "0",
+            "experimental" : "0",
+            "local::lib" : "0",
+            "namespace::clean" : "0",
             "perl" : "5.20"
          }
       },
