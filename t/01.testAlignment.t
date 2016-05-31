@@ -44,9 +44,9 @@ for my $contigKey (keys $alignment->{contigs}->%*)
 }
 is scalar @missing, 0, "Contigs matched to best aligned reference sequence";
 
-
 say "\t",'$obj->runMuscle';
-$alignment->runMuscle("data/pAss03/K00001.temp.ref.msa");
+ok `which muscle`, "Muscle is installed";
+$alignment->runMuscle("$FindBin::Bin/data/pAss03/K00001.temp.ref.msa");
 my @protMSAPositions = sort {$a <=> $b} values $alignment->{refseq}{'ref|NP_711797.1|'}{map}->%*;
 
     my $msa = <DATA>; chomp $msa;
