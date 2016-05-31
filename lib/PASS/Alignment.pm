@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 package PASS::Alignment;
-use v5.20;
+use v5.020;
 use Moo;
 use experimental qw/signatures postderef/;
 use namespace::clean;
