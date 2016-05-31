@@ -12,5 +12,5 @@ requires 'autodie';
 requires 'Getopt::Lucid';
 requires 'local::lib';
 requires 'Parallel::ForkManager';
-requires 'Array::Utils'
-requires 'Test::More'
+requires 'Array::Utils';
+requires 'Test::More';
