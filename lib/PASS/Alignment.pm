@@ -10,6 +10,8 @@ use Statistics::Basic qw/mean stddev/;
 use List::MoreUtils qw/uniq/;
 use Data::Dumper;
 
+our $VERSION = "0.01";
+
 # ABSTRACT: Gene centric diversity indexing
 
 =pod
