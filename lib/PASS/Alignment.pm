@@ -32,6 +32,18 @@ C<    alignmentFiles  =>  [glob("$FindBin::Bin/data/pAss01/K00001/alignment-*")]
 C<    outputPrefix    =>  "$FindBin::Bin/data/pAss",>
 C<)>
 
+=head1 LICENSE
+
+Copyright (C) etheleon.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+etheleon E<lt>picy2k@gmail.comE<gt>
+
+
 =head1 Methods
 
 =cut
