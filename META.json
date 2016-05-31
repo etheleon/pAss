@@ -57,7 +57,7 @@
             "experimental" : "0",
             "local::lib" : "0",
             "namespace::clean" : "0",
-            "perl" : "5.20"
+            "perl" : "5.020"
          }
       },
       "test" : {
