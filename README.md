@@ -50,9 +50,9 @@ docker run --rm \
     /tmp/pAss/maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt 
 ```
 
-### Source Installation 
+### Installation from source
 
-#### Dependencies/Pre-requisites
+#### 1. Dependencies/Pre-requisites
 
 * Tools
     * [MEGAN5](http://ab.inf.uni-tuebingen.de/software/megan/) 
@@ -70,11 +70,16 @@ docker run --rm \
   * dplyr
   * Biostrings (from Bioconductor)
 
+#### 2. Install
+
+    ```
+    cpanm https://github.com/etheleon/pAss.git@minila
+    ```
 
 #### Usage
 
 ```
-$ ./maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ --theads 20
+$ maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ --theads 20
 ```
 
 ### Required Input
