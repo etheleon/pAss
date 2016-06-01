@@ -73,7 +73,7 @@ docker run --rm \
 #### 2. Install
 
     ```
-    cpanm https://github.com/etheleon/pAss.git@minila
+    cpanm https://github.com/etheleon/pAss.git
     ```
 
 #### Usage
