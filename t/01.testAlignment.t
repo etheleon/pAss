@@ -44,9 +44,8 @@ for my $contigKey (keys $alignment->{contigs}->%*)
 }
 is scalar @missing, 0, "Contigs matched to best aligned reference sequence";
 
-
 say "\t",'$obj->runMuscle';
-$alignment->runMuscle("data/pAss03/K00001.temp.ref.msa");
+$alignment->runMuscle("$FindBin::Bin/data/pAss03/K00001.temp.ref.msa");
 my @protMSAPositions = sort {$a <=> $b} values $alignment->{refseq}{'ref|NP_711797.1|'}{map}->%*;
 
     my $msa = <DATA>; chomp $msa;
@@ -116,7 +115,7 @@ foreach my $contigID (sort keys $alignment->{contigs}->%*)
 
 ##minmax
 
-done_testing();
+done_testing;
 
 __DATA__
 ------------------------------------------------MTSLRIFKQVPRLLF----------------GFNTI-------------DRINELLPK-KNNGDYYIFIID--DVHQKGTIHSRLKHASED-----------------------------MIEWFPASVKEPSTLQ-ID----NLRD--------------KFMQARDHK-----L-----PKAIVGIGGG-STMDVAKA-LSVMMCNEGS---------ASQYQ----GWDLV-PNPGI------YKIGIP-------TVAGSGAEASRTAVLMGKERKFGINS-----------DHS-MFDAIILDS--SLIKNVPIA-QRFYS------GMDCYIHCVESLQ----------------------------GTMINELA-----KGNASKALELC------------------EKVFLSDGDDD---MLLT-ASYMGG---VSIV--N-----------------------SEVGV-CHALSYG------------LSLELGYRHG-------------------------------FANCVAFNVLDEY----Y--------------------------GP-----WVDR---------------FREML-------KIH--------KIELPK----NV---------CRSLDEAA--MQR------MVNMTLK----------MER------------------PLTNA--LGENWKDKMTP----NKIVSLYERM-------------------------------

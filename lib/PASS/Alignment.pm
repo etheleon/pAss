@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 package PASS::Alignment;
-use v5.20;
+use v5.020;
 use Moo;
 use experimental qw/signatures postderef/;
 use namespace::clean;
@@ -9,6 +9,10 @@ use Bio::SeqIO;
 use Statistics::Basic qw/mean stddev/;
 use List::MoreUtils qw/uniq/;
 use Data::Dumper;
+
+our $VERSION = "0.01";
+
+# ABSTRACT: Gene centric diversity indexing
 
 =pod
 
@@ -27,6 +31,18 @@ C<    refseqFasta     =>  "$FindBin::Bin/data/refSeqProtDB/ko\:K00001", #referen
 C<    alignmentFiles  =>  [glob("$FindBin::Bin/data/pAss01/K00001/alignment-*")],>
 C<    outputPrefix    =>  "$FindBin::Bin/data/pAss",>
 C<)>
+
+=head1 LICENSE
+
+Copyright (C) etheleon.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+etheleon E<lt>picy2k@gmail.comE<gt>
+
 
 =head1 Methods
 
@@ -121,6 +137,8 @@ sub assignContig2ref($self){
         while(my $seqObj = $in->next_seq)
 		{
             my $contigID  =  $seqObj->display_id;
+            my $contigDESC = $seqObj->desc;
+            my $direction = $contigDESC =~ m/\(rev\)/ ? '(rev)' : '(ntRev)';
             my $sequence = $seqObj->seq;
             my $gap = ($sequence =~ s/-//g);
             my $length = length $sequence;
@@ -130,6 +148,7 @@ sub assignContig2ref($self){
                 seq  	  =>  $seqObj->seq,
                 len 	  =>   $length,
                 parentREF => $refseqID,
+                direction => $direction
             };
             if(!exists $self->{contigs}{$contigID}){
                 $self->{contigs}{$contigID} = $contigDetails;

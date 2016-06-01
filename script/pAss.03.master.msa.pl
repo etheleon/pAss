@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
 use FindBin qw/$Bin/;
-use local::lib "$Bin/local/";
 use Modern::Perl '2015'                                                        ;
 use Pod::Usage;
 use experimental qw/signatures postderef/                                      ;
@@ -60,6 +59,7 @@ foreach my $contigID (sort keys $alignment->{contigs}->%*)
         -alphabet =>'dna',
     )                                                                          ;
     my $parent = $alignment->{contigs}{$contigID}{parentREF}                   ;
+    $parent .= " ".$alignment->{contigs}{$contigID}{direction};
     my %contigHash = $alignment->{contigs}{$contigID}{globalCoordinates}->%*   ;
 
     for my $aaXaa(sort {$a <=> $b } keys $alignment->{pos}->%*)
