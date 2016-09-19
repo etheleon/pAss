@@ -34,7 +34,8 @@ WORKDIR /tmp
 #MEGAN#############################
 RUN apt-get install -y xvfb
 RUN wget -nv http://ab.inf.uni-tuebingen.de/data/software/megan5/download/MEGAN_unix_5_11_3.sh
-COPY megan_install_v5 /tmp
+RUN perl -E 'say join "\n", "", 1, "", 1, "", "", "", 38000, n, ""' > /tmp/megan_install_v5
+#COPY megan_install_v5 /tmp
 RUN bash MEGAN_unix_5_11_3.sh < /tmp/megan_install_v5
 
 #Dependencies############################
@@ -62,10 +63,11 @@ RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
 
 WORKDIR /tmp/pAss
 RUN carton
-
-RUN perl Makefile.PL PREFIX=./local/ && \
-    make && \
-    make install
+RUN cpanm Minilla
+RUN minil install
+#RUN perl Makefile.PL PREFIX=./local/ && \
+    #make && \
+    #make install
 
 ENV PATH=/usr/local/megan:/tmp/pAss:${PATH}
 ENV PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1
@@ -76,4 +78,4 @@ VOLUME ["/data/contigs", "data/refSeqProtDB", "data/out", "data/misc"]
 
 
 #################### INSTALLATION ENDS ##############################
-MAINTAINER Wesley GOI <picy2k@gmail.com>
+MAINTAINER Wesley GOI <wesley@bic.nus.edu.sg>
