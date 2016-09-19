@@ -66,7 +66,7 @@ RUN apt-get install -y git
 #USER wesley
 
 #PASS
-RUN git clone -b docker https://github.com/etheleon/pAss.git /tmp/pAss
+RUN git clone https://github.com/etheleon/pAss.git /tmp/pAss
 
 RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
     cpanm local::lib Carton Module::Install 
