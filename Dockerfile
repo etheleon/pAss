@@ -9,7 +9,17 @@
 # Tags:             Genomics Metagenomics
 # Provides:         bowtie 1.1.2
 # Base Image:       biodckr/biodocker
-# Run Cmd:          docker run <image> -v $HOME/contigs:/data/contigs -v $HOME/refSeqProtDB:/data/refSeqProfDB -v $HOME/out:/data/out maxDiversity  
+# Run Cmd:          docker run <image>  -v $HOME/contigs:/data/contigs \
+#                                       -v $HOME/refSeqProtDB:/data/refSeqProfDB \
+#                                       -v $HOME/out:/data/out \
+#                                       maxDiversity --outputDIR /data/out \
+#                                                   --format \
+#                                                   --threads 8 \
+#                                                   --refseqKO /data/refSeqProtDB  \
+#                                                   --contigs /data/contigs  \
+#                                                   --megan /usr/local/bin/MEGAN \
+#                                                   --meganLicense /data/misc/MEGAN5-academic-license.txt
+#
 #################################################################
 
 # Build image with:  docker build -t krizsan/ubuntu1504java8:v1 .
@@ -74,7 +84,7 @@ ENV PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1
 RUN R -e 'install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")'
 RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")'
 CMD ["/tmp/pAss/maxDiversity","--help"]
-VOLUME ["/data/contigs", "data/refSeqProtDB", "data/out", "data/misc"]
+VOLUME ["/data/contigs", "/data/refSeqProtDB", "/data/out", "data/misc"]
 
 
 #################### INSTALLATION ENDS ##############################
