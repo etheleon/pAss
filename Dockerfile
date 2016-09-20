@@ -9,17 +9,12 @@
 # Tags:             Genomics Metagenomics
 # Provides:         bowtie 1.1.2
 # Base Image:       biodckr/biodocker
-# Run Cmd:          docker run <image>  -v $HOME/contigs:/data/contigs \
-#                                       -v $HOME/refSeqProtDB:/data/refSeqProfDB \
-#                                       -v $HOME/out:/data/out \
-#                                       maxDiversity --outputDIR /data/out \
-#                                                   --format \
-#                                                   --threads 8 \
-#                                                   --refseqKO /data/refSeqProtDB  \
-#                                                   --contigs /data/contigs  \
-#                                                   --megan /usr/local/bin/MEGAN \
-#                                                   --meganLicense /data/misc/MEGAN5-academic-license.txt
-#
+#Run CMD:  	ROOTDIR=/Users/uesu/github/reAssemble/justK03043
+#		docker run -v $ROOTDIR/data/contigs:/data/contigs \
+#		    -v $ROOTDIR/data/konr:/data/refSeqProtDB \
+#		    -v $ROOTDIR/out:/data/out  \
+#		    -v $ROOTDIR/misc:/data/misc newpass:latest \
+#		    maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt
 #################################################################
 
 # Build image with:  docker build -t krizsan/ubuntu1504java8:v1 .
@@ -42,7 +37,7 @@ RUN apt-get install -y ncbi-blast+
 WORKDIR /tmp
 
 #MEGAN#############################
-RUN apt-get install -y xvfb
+RUN apt-get update && apt-get install -y xvfb
 RUN wget -nv http://ab.inf.uni-tuebingen.de/data/software/megan5/download/MEGAN_unix_5_11_3.sh
 RUN perl -E 'say join "\n", "", 1, "", 1, "", "", "", 38000, n, ""' > /tmp/megan_install_v5
 #COPY megan_install_v5 /tmp
