@@ -10,11 +10,11 @@ use Getopt::Lucid qw/:all/;
 
 my @specs = (
     Param("megan|m")->default("/usr/local/bin/MEGAN"),
-    Param("meganLicense|l")->default($ENV{'HOME'}."/MEGAN5-academic-license.txt"),
+    Param("meganLicense|l")->default("/data/misc/MEGAN5-academic-license.txt"),
     Switch("format|f")->default(0),
-    Param("outputDIR|o")->default(""),
-    Param("contigs|c"),
-    Param("refseqKO|r")->default("/export2/home/uesu/db/konr/"),
+    Param("outputDIR|o")->default("/data/out"),
+    Param("contigs|c")->default("/data/contigs"),
+    Param("refseqKO|r")->default("/data/refSeqProtDB"),
     Param("threads|t")->default(1),
     Param("prefix|p"),
     Switch("help|h"),
