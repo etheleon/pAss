@@ -6,6 +6,10 @@ PADI - Protein-guided Assembly and Diversity Indexing
 
 [![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss) 
 
+## Build 
+
+[![Build Status](https://travis-ci.org/etheleon/pAss.svg?branch=master)](https://travis-ci.org/etheleon/pAss)
+
 ## DOCKER IMAGE: 
 
 [![DockerImage](https://images.microbadger.com/badges/version/etheleon/newpass.svg)](http://microbadger.com/images/etheleon/newpass "Get your own version badge on microbadger.com")
