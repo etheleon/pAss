@@ -25,24 +25,23 @@ PADI - Protein-guided Assembly and Diversity Indexing
 
 ## Description
 
-PADI enumerates and analyses protein guided assemblies of proteinaceous functional bins. 
-We look to the regions of sequence maximal diversity determined by global multiple sequence alignment (MSA)
+PADI short for _Protein-guided Assembly and Diversity Indexing_ is the core module / tool in a pipeline for accessing diversity in complex microbial communities.
+It predicts number of genes within each KEGG (proteinaceous) gene family.
+PADI dynamically identifies regions of high diversity from contigs aligned to a guide consisting of reference protein sequences.
 
 ## Usage
 
-```
-$ maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ --theads 20
-```
+    maxDiversity    --megan </path/to/MEGAN> \
+                    --meganLicense <path/to/MEGAN5-academic-license.txt> \
+                    -f --outputDIR </path/to/output/dir> \
+                    --contigs ./example/data/contigs/ \
+                    --refseqKO ./example/refSeqProtDB/ \
+                    --theads 20
 
-### Required Input
+    --contigs Folder containing binned contigs according to their KEGG family / orthology (NEWBLER 2.6 (20110517_1502))
+    --refseqKO Reference sequences grouped by their gene families 
 
-
-1. Contigs are assembled from functionally binned reads (eg. NEWBLER 2.6 (20110517_1502))
-2. Reference sequences grouped by their gene families
-
-Use [pipeline](https://github.com/quanyu2015/ngs_pipeline) to get from raw reads to end of procedure.
-
-
+> Use [pipeline](https://github.com/quanyu2015/ngs_pipeline) to get from raw reads to end of procedure.
 
 ### Procedure
 
@@ -69,22 +68,18 @@ Use [pipeline](https://github.com/quanyu2015/ngs_pipeline) to get from raw reads
 
 #### Example: SINGLE COPY GENES
 
-```
-$ cp SingleCopyGene SCG
-$ mkdir SCG/out SCG/misc
-$ #Place MEGAN5 license file inside misc
-$ cp MEGAN5-academic-license.txt SCG/misc/
-```
+    cp SingleCopyGene SCG
+    mkdir SCG/out SCG/misc
+    #Place MEGAN5 license file inside misc
+    cp MEGAN5-academic-license.txt SCG/misc/
 
-```
-docker run --rm \
-    -v `pwd`/SCG/data/konr:/data/refSeqProtDB \
-    -v `pwd`/SCG/data/newbler:/data/contigs \
-    -v `pwd`/SCG/out:/data/out \
-    -v `pwd`/SCG/misc:/data/misc \
-    pass \
-    /tmp/pAss/maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt 
-```
+    docker run --rm \
+        -v `pwd`/SCG/data/konr:/data/refSeqProtDB \
+        -v `pwd`/SCG/data/newbler:/data/contigs \
+        -v `pwd`/SCG/out:/data/out \
+        -v `pwd`/SCG/misc:/data/misc \
+        pass \
+        /tmp/pAss/maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt 
 
 ### Installation from source
 
@@ -108,9 +103,7 @@ docker run --rm \
 
 #### 2. Install
 
-    ```
     cpanm https://github.com/etheleon/pAss.git
-    ```
 
 ## Description of pipeline
 
