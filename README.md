@@ -1,24 +1,48 @@
 PADI - Protein-guided Assembly and Diversity Indexing
 ====
 
-
-## DOI: 
-
-[![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss) 
-
-## Build 
-
 [![Build Status](https://travis-ci.org/etheleon/pAss.svg?branch=master)](https://travis-ci.org/etheleon/pAss)
-
-## DOCKER IMAGE: 
-
 [![DockerImage](https://images.microbadger.com/badges/version/etheleon/newpass.svg)](http://microbadger.com/images/etheleon/newpass "Get your own version badge on microbadger.com")
 [![Image description](https://images.microbadger.com/badges/image/etheleon/newpass.svg)](http://microbadger.com/images/etheleon/newpass "Get your own image badge on microbadger.com")
+[![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss) 
+
+## Table of Contents
+  * [PADI - Protein-guided Assembly and Diversity Indexing](#padi---protein-guided-assembly-and-diversity-indexing)
+    * [Description](#description)
+      * [Procedure](#procedure)
+        * [Filters](#filters)
+    * [Usage](#usage)
+      * [Required Input](#required-input)
+    * [Installation](#installation)
+      * [Docker Installation (Recommended)](#docker-installation-recommended)
+        * [Example: SINGLE COPY GENES](#example-single-copy-genes)
+      * [Installation from source](#installation-from-source)
+        * [1. Dependencies/Pre-requisites](#1-dependenciespre-requisites)
+        * [2. Install](#2-install)
+    * [Description of pipeline](#description-of-pipeline)
+    * [Publication](#publication)
+    * [Future](#future)
 
 ## Description
 
 PADI enumerates and analyses protein guided assemblies of proteinaceous functional bins. 
 We look to the regions of sequence maximal diversity determined by global multiple sequence alignment (MSA)
+
+## Usage
+
+```
+$ maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ --theads 20
+```
+
+### Required Input
+
+
+1. Contigs are assembled from functionally binned reads (eg. NEWBLER 2.6 (20110517_1502))
+2. Reference sequences grouped by their gene families
+
+Use [pipeline](https://github.com/quanyu2015/ngs_pipeline) to get from raw reads to end of procedure.
+
+
 
 ### Procedure
 
@@ -43,7 +67,7 @@ We look to the regions of sequence maximal diversity determined by global multip
 
 [Install](https://docs.docker.com/engine/installation/) Docker
 
-#### Usage: SINGLE COPY GENES
+#### Example: SINGLE COPY GENES
 
 ```
 $ cp SingleCopyGene SCG
@@ -87,20 +111,6 @@ docker run --rm \
     ```
     cpanm https://github.com/etheleon/pAss.git
     ```
-
-#### Usage
-
-```
-$ maxDiversity --megan </path/to/MEGAN> --meganLicense <path/to/MEGAN5-academic-license.txt> -f --outputDIR </path/to/output/dir> --contigs ./example/data/contigs/ --refseqKO ./example/refSeqProtDB/ --theads 20
-```
-
-### Required Input
-
-
-1. Contigs are assembled from functionally binned reads (eg. NEWBLER 2.6 (20110517_1502))
-2. Reference sequences grouped by their gene families
-
-Use [pipeline](https://github.com/quanyu2015/ngs_pipeline) to get from raw reads to end of procedure.
 
 ## Description of pipeline
 
