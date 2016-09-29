@@ -1,11 +1,14 @@
-sudo: required
-
+sudo: false
 language: perl
-install: true
-services:
-  - docker
+addons:
+  apt:
+      packages: 
+        - r-base
 
-before_install: 
-  - docker pull etheleon/newpass
-script:
-  - minil test
+before_script:
+  - "git config --global user.email 'you@example.com'"
+  - "git config --global user.name 'Your Name'"
+install:
+  -  cpanm --quiet --installdeps --notest .
+perl:
+  - "5.22"
