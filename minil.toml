@@ -2,4 +2,4 @@ name = "PASS-Alignment"
 # badges = ["travis"]
 module_maker="ModuleBuildTiny"
 script_files = ['script/*']
-requires_external_bin = ['xvfb', 'MEGAN', 'muscle']
+requires_external_bin = ['xvfb-run', 'MEGAN', 'muscle']

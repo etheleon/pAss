@@ -1,3 +1,4 @@
+requires 'Devel::CheckBin';
 requires 'Module::Install';
 requires 'Modern::Perl';
 requires 'Moo';
