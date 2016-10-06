@@ -30,15 +30,23 @@ system "mkdir $outputdir" unless -d $outputdir;
 my $kodb         = $opt->get_kodb;
 my %kohash;
 my $toFormat = $opt->get_format;
-#
+
+
+#Step0: Only makeblastdb for KOs which have assemblies completed, ie. with folders in the contig dir
+my $contig = $opt->get_contigs;
+$kohash{"ko:$_"}++ for map { (split/\//)[-1] } <$contig/*>;
+
 #Step1::Index KOs and build the blast library
 for (<"$kodb/*">)
 {
-    m/ko:K\d{5}(?!\.phr|\.pin|\.pnd|\.pni|\.pog|\.psd|\.psi|\.psq)/;
-    $kohash{$&}++;
-    if($toFormat){
-        `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
-        say STDERR $_;
+    #m/ko:K\d{5}(?!\.phr|\.pin|\.pnd|\.pni|\.pog|\.psd|\.psi|\.psq)/;
+    if(m/ko:K\d{5}$/){
+        my $isKOI = exists $kohash{$&};
+        if($toFormat && $isKOI)
+        {
+            `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
+            say STDERR $_;
+        }
     }
 }
 say STDERR "    #stored KOs";

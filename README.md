@@ -4,6 +4,9 @@ PADI - Protein-guided Assembly and Diversity Indexing
 [![Build Status](https://travis-ci.org/etheleon/pAss.svg?branch=master)](https://travis-ci.org/etheleon/pAss)
 [![DockerImage](https://images.microbadger.com/badges/version/etheleon/newpass.svg)](http://microbadger.com/images/etheleon/newpass "Get your own version badge on microbadger.com")
 [![Image description](https://images.microbadger.com/badges/image/etheleon/newpass.svg)](http://microbadger.com/images/etheleon/newpass "Get your own image badge on microbadger.com")
+
+## DOI:
+
 [![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss) 
 
 ## Table of Contents
@@ -22,12 +25,15 @@ PADI - Protein-guided Assembly and Diversity Indexing
     * [Description of pipeline](#description-of-pipeline)
     * [Publication](#publication)
     * [Future](#future)
+## Build 
 
 ## Description
 
 PADI short for _Protein-guided Assembly and Diversity Indexing_ is the core module / tool in a pipeline for accessing diversity in complex microbial communities.
 It predicts number of genes within each KEGG (proteinaceous) gene family.
 PADI dynamically identifies regions of high diversity from contigs aligned to a guide consisting of reference protein sequences.
+
+## DOCKER IMAGE: 
 
 ## Usage
 
