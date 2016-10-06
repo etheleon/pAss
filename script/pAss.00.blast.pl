@@ -37,17 +37,19 @@ my $contig = $opt->get_contigs;
 $kohash{"ko:$_"}++ for map { (split/\//)[-1] } <$contig/*>;
 
 #Step1::Index KOs and build the blast library
-for (<"$kodb/*">)
-{
+#{
     #m/ko:K\d{5}(?!\.phr|\.pin|\.pnd|\.pni|\.pog|\.psd|\.psi|\.psq)/;
-    if(m/ko:K\d{5}$/){
-        my $isKOI = exists $kohash{$&};
-        if($toFormat && $isKOI)
+    #if(m/ko:K\d{5}$/){
+        #my $isKOI = exists $kohash{$&};
+        if($toFormat)
         {
-            `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
-            say STDERR $_;
+            for my $key (keys %kohash) (<"$kodb/*">)
+            {
+                `makeblastdb -dbtype prot -in $kodb/$& -parse_seqids -out $kodb/$&`;
+                say STDERR $key;
+            }
         }
-    }
+    #}
 }
 say STDERR "    #stored KOs";
 
