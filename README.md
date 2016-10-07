@@ -42,7 +42,7 @@ PADI dynamically identifies regions of high diversity from contigs aligned to a 
                     -f --outputDIR </path/to/output/dir> \
                     --contigs ./example/data/contigs/ \
                     --refseqKO ./example/refSeqProtDB/ \
-                    --theads 20
+                    --threads 20
 
     --contigs Folder containing binned contigs according to their KEGG family / orthology (NEWBLER 2.6 (20110517_1502))
     --refseqKO Reference sequences grouped by their gene families 
