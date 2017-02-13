@@ -31,12 +31,12 @@ if(length(params)==0){
     params = c(windowFile, msaFile, outputDIR)
 }
 df        = read.table(params[1], h = T)
-df[is.na(df)] = 0   #remove na 
+df[is.na(df)] = 0   #remove na
 sequences = readDNAStringSet(filepath = params[2])
 outputDIR = params[3]
 dir.create(outputDIR)
 
-#+ koBackground 
+#+ koBackground
 ko = tail(strsplit(params[1], '/')[[1]], n=1)
 #koInfo = koname(ko, minimal=FALSE)
 
@@ -60,7 +60,7 @@ selectdf = df %>%
 #when there are multiple windows, (usually clustered together) with the same length
 if(nrow(selectdf)>1)
     selectdf = selectdf[ceiling(nrow(selectdf)/2),]
-str(selectdf)
+#str(selectdf)
 
 #' ## Output contigs of interest 
 #' `findLoc` function generates the interval information for extraction the section on the contig which is of interest.
@@ -115,12 +115,61 @@ lapply(selectedSeq$contig, function(contigName)
                 )
 })
 
+# adds the contig's position into the header as well, now its just the location
+contigsSequences = readDNAStringSet(file="/export2/home/uesu/simulation_fr_the_beginning/reAssemble/scg/data/newbler/K00927/454AllContigs.fna")
+contigIndex = names(contigsSequences) %>% gsub("(contig\\d{5}).+", "\\1", .)
+
+locationsDF = lapply(sequences2Output, function(contig){
+    #browser()
+    thisContig = gsub("(contig\\d{5}).+", "\\1", contig$header)
+    fullSequence = contigsSequences[which(contigIndex %in% thisContig)] 
+    isStraight = grepl("ntRev", contig$header)
+    if(isStraight){
+        mi = regexpr(contig$sequence, fullSequence %>% as.character)
+        if(mi == -1){
+            warning(sprintf("Can't find MDR substring in %s", thisContig))
+            mdr = data.frame(
+                contig = thisContig,
+                start = NA,
+                length = NA,
+                end = NA
+            )
+        }else{
+            mdr = data.frame(
+                contig = thisContig,
+                start = mi[1],
+                length = attr(mi, "match.length")
+            ) %>% mutate(end = start + length)
+        }
+    }else{
+        mi= regexpr(contig$sequence, fullSequence %>% reverse %>% complement %>% as.character)
+        if(mi == -1){
+            warning(sprintf("Can't find MDR substring in %s", thisContig))
+            mdr = data.frame(
+                contig = thisContig,
+                start = NA,
+                length = NA,
+                end = NA
+            )
+        }else{
+            mdr = data.frame(
+                contig = thisContig,
+                start = mi[1],
+                length = attr(mi, "match.length")
+            ) %>% mutate(end = start + length)
+        }
+    }
+}) %>% do.call(rbind,.)
+
 #Generate DNAStringSet Obj
 output = DNAStringSet(lapply(sequences2Output, function(x) DNAString(x$sequence)))
 #Annotated with headers
-output@ranges@NAMES = do.call(c,lapply(sequences2Output, function(x) x$header))
+output@ranges@NAMES = lapply(sequences2Output, function(x){ 
+    contigName = x$header %>% gsub("(contig\\d{5}).+", "\\1", .)
+    locDF = filter(locationsDF, contig == contigName)
+    sprintf("%s contigStart: %s contigEnd: %s", x$header, locDF$start, locDF$end)
+}) %>% do.call(c,.)
 #output to file
-output
 writeXStringSet(output, sprintf("%s/%s.fna", outputDIR, ko))
 
 #+ plot, message=FALSE
