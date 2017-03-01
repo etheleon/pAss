@@ -33,7 +33,6 @@ PADI short for _Protein-guided Assembly and Diversity Indexing_ is the core modu
 It predicts number of genes within each KEGG (proteinaceous) gene family.
 PADI dynamically identifies regions of high diversity from contigs aligned to a guide consisting of reference protein sequences.
 
-## DOCKER IMAGE: 
 
 ## Usage
 
