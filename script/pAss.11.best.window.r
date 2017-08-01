@@ -28,12 +28,14 @@ if(length(params)==0){
     windowFile = "/export2/home/uesu2/reDiamond/out/pAss.10/K00001/K00001"
     msaFile    = "/export2/home/uesu/reDiamond/out/assm.0500/K00001.msa"
     outputDIR  = "."
+    contigs = "/export2/home/uesu/simulation_fr_the_beginning/reAssemble/scg/data/newbler/K00927/454AllContigs.fna"
     params = c(windowFile, msaFile, outputDIR)
 }
 df        = read.table(params[1], h = T)
 df[is.na(df)] = 0   #remove na
 sequences = readDNAStringSet(filepath = params[2])
 outputDIR = params[3]
+fullSeq = params[4]
 dir.create(outputDIR)
 
 #+ koBackground
@@ -116,7 +118,7 @@ lapply(selectedSeq$contig, function(contigName)
 })
 
 # adds the contig's position into the header as well, now its just the location
-contigsSequences = readDNAStringSet(file="/export2/home/uesu/simulation_fr_the_beginning/reAssemble/scg/data/newbler/K00927/454AllContigs.fna")
+contigsSequences = readDNAStringSet(file=fullSeq)
 contigIndex = names(contigsSequences) %>% gsub("(contig\\d{5}).+", "\\1", .)
 
 locationsDF = lapply(sequences2Output, function(contig){
@@ -176,7 +178,7 @@ writeXStringSet(output, sprintf("%s/%s.fna", outputDIR, ko))
 p0 = qplot(output@ranges@width, geom="histogram")+
 ggtitle(sprintf("Selected Contig lengths Total:%s contigs",length(sequences2Output)))
 ggsave(p0, file=sprintf("%s/%s.pdf", outputDIR,ko))
-p0
+#p0
 
 #+ sessionInfo
 sessionInfo()

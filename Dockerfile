@@ -78,9 +78,10 @@ ENV PATH=/usr/local/megan:/tmp/pAss:${PATH}
 ENV PERL5LIB=/tmp/pAss/local/lib/perl5:/tmp/pAss/local/share/perl/5.22.1
 RUN R -e 'install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")'
 RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")'
-CMD ["/tmp/pAss/maxDiversity","--help"]
-VOLUME ["/data/contigs", "/data/refSeqProtDB", "/data/out", "data/misc"]
 
+VOLUME ["/data/contigs", "/data/refSeqProtDB", "/data/out", "data/misc"]
+ENTRYPOINT ["/tmp/pAss/maxDiversity"]
+CMD ["/tmp/pAss/maxDiversity", "--outputDIR", "/data/out", "--format", "--refseqKO", "/data/refSeqProtDB", "--contigs", "/data/contigs", "--megan", "/usr/local/bin/MEGAN", "--meganLicense", "/data/misc/MEGAN5-academic-license.txt"]
 
 #################### INSTALLATION ENDS ##############################
 MAINTAINER Wesley GOI <wesley@bic.nus.edu.sg>
