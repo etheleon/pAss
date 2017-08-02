@@ -82,10 +82,9 @@ PADI dynamically identifies regions of high diversity from contigs aligned to a 
         -v `pwd`/SCG/data/konr:/data/refSeqProtDB \
         -v `pwd`/SCG/data/newbler:/data/contigs \
         -v `pwd`/SCG/out:/data/out \
-        -v `pwd`/SCG/misc:/data/misc \
-        pass \
-        /tmp/pAss/maxDiversity --outputDIR /data/out --format --threads 8 --refseqKO /data/refSeqProtDB  --contigs /data/contigs  --megan /usr/local/bin/MEGAN --meganLicense /data/misc/MEGAN5-academic-license.txt 
-
+        -v `pwd`/SCG/misc/MEGAN5-academic-license.txt:/data/misc/MEGAN5-academic-license.txt \
+        etheleon/pass:0.1.2
+        
 ### Installation from source
 
 #### 1. Dependencies/Pre-requisites
