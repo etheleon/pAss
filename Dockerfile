@@ -80,7 +80,7 @@ RUN R -e 'install.packages("dplyr", repos="http://cran.bic.nus.edu.sg/")'
 RUN R -e 'source("http://bioconductor.org/biocLite.R"); biocLite("Biostrings")'
 
 VOLUME ["/data/contigs", "/data/refSeqProtDB", "/data/out", "data/misc"]
-ENTRYPOINT ["/tmp/pAss/maxDiversity"]
+ENTRYPOINT ["/tmp/pAss/script/maxDiversity"]
 CMD ["--outputDIR", "/data/out", "--format", "--refseqKO", "/data/refSeqProtDB", "--contigs", "/data/contigs", "--megan", "/usr/local/bin/MEGAN", "--meganLicense", "/data/misc/MEGAN5-academic-license.txt"]
 
 #################### INSTALLATION ENDS ##############################
