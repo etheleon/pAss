@@ -96,7 +96,7 @@ foreach my $ko (`ls $outputDir/pAss10/`)
 {
     chomp $ko;
     $pm4->start and next;
-    `pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/`;
+    `$Bin/pAss.11.best.window.r $outputDir/pAss10/$ko/$ko $outputDir/pAss03/$ko.msa $outputDir/pAss11/ $contigDir/$ko/454AllContigs.fna`;
     $pm4->finish;
 }
 $pm4->wait_all_children;
