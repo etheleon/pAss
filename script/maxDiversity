@@ -8,6 +8,9 @@ use Parallel::ForkManager;
 use Pod::Usage;
 use Getopt::Lucid qw/:all/;
 
+
+chomp(my $cpu_count = `grep -c -P "^processor\\s+:" /proc/cpuinfo`);
+
 my @specs = (
     Param("megan|m")->default("/usr/local/bin/MEGAN"),
     Param("meganLicense|l")->default("/data/misc/MEGAN5-academic-license.txt"),
@@ -15,7 +18,7 @@ my @specs = (
     Param("outputDIR|o")->default("/data/out"),
     Param("contigs|c")->default("/data/contigs"),
     Param("refseqKO|r")->default("/data/refSeqProtDB"),
-    Param("threads|t")->default(1),
+    Param("threads|t")->default($cpu_count),
     Param("prefix|p"),
     Switch("help|h"),
     Param("windowSize|w")->default(200)
