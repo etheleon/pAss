@@ -7,7 +7,9 @@ PADI - Protein-guided Assembly and Diversity Indexing
 
 ## DOI:
 
-[![DOI](https://zenodo.org/badge/19045/etheleon/pAss.svg)](https://zenodo.org/badge/latestdoi/19045/etheleon/pAss) 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2579139.svg)](https://doi.org/10.5281/zenodo.2579139)
+
+Goi, Wesley Chin Lui. (2019, February 27). etheleon/pAss: PhD Thesis (Version 0.1.0). Zenodo. http://doi.org/10.5281/zenodo.2579139
 
 ## Table of Contents
   * [PADI - Protein-guided Assembly and Diversity Indexing](#padi---protein-guided-assembly-and-diversity-indexing)
